@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../core/routes/app_routes.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/section_title.dart';
 import '../widgets/role_card.dart';
@@ -69,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                           'Crear quizzes, administrar preguntas y revisar resultados.',
                           buttonText: 'Ingresar',
                           onPressed: () {
-                            context.go('/login');
+                            context.go(AppRoutes.login);
                           },
                         ),
                       ),
@@ -84,7 +84,7 @@ class HomeScreen extends StatelessWidget {
                           'Ingresa un código y responde el cuestionario.',
                           buttonText: 'Comenzar',
                           onPressed: () {
-                            context.go('/join');
+                            context.go(AppRoutes.join);
                           },
                         ),
                       ),
