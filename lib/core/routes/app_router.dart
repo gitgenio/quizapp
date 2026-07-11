@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/screens/home_screen.dart';
-import '../../shared/screens/placeholder_screen.dart';
+import '../../shared/widgets/placeholder_screen.dart';
 import 'app_routes.dart';
 
 final GoRouter appRouter = GoRouter(
