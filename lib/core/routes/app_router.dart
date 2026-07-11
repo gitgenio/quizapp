@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/screens/login_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../shared/widgets/placeholder_screen.dart';
 import 'app_routes.dart';
@@ -15,8 +16,7 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.login,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Login'),
+      builder: (_, __) => LoginScreen(),
     ),
 
     GoRoute(
