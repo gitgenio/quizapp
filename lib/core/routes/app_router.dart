@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
+import '../../features/admin/screens/quiz_list_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../shared/widgets/placeholder_screen.dart';
@@ -70,6 +71,11 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.quiz,
       builder: (_, __) =>
       const PlaceholderScreen(title: 'Quiz'),
+    ),
+
+    GoRoute(
+      path: AppRoutes.quizList,
+      builder: (_, __) => QuizListScreen(),
     ),
 
     GoRoute(
