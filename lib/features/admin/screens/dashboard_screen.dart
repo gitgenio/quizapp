@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/section_title.dart';
+import '../widgets/admin_scaffold.dart';
 import '../widgets/dashboard_option_card.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -11,8 +12,9 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
+    return AdminScaffold(
       title: 'Dashboard',
+      selectedIndex: 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
