@@ -26,12 +26,6 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.dashboard,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Dashboard'),
-    ),
-
-    GoRoute(
-      path: AppRoutes.dashboard,
       builder: (_, __) => const DashboardScreen(),
     ),
 
