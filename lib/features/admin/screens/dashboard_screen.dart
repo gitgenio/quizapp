@@ -38,55 +38,59 @@ class DashboardScreen extends StatelessWidget {
       ),
     ];
 
-    final columns = Responsive.dashboardColumns(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    double cardWidth;
+
+    if (Responsive.isDesktop(context)) {
+      // Dos tarjetas por fila
+      cardWidth = (screenWidth - 380) / 2;
+    } else if (Responsive.isTablet(context)) {
+      cardWidth = (screenWidth - 160) / 2;
+    } else {
+      cardWidth = double.infinity;
+    }
 
     return AdminScaffold(
       title: 'Dashboard',
       selectedIndex: 0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Bienvenido',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'Selecciona una opción para administrar QuizApp.',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-
-          const SizedBox(height: 24),
-
-          Expanded(
-            child: GridView.builder(
-              itemCount: cards.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-
-                // Muy importante para evitar overflows
-                childAspectRatio:
-                Responsive.isMobile(context) ? 1.05 : 1.18,
-              ),
-              itemBuilder: (context, index) {
-                final card = cards[index];
-
-                return DashboardOptionCard(
-                  icon: card.icon,
-                  title: card.title,
-                  description: card.description,
-                  onPressed: () {
-                    context.go(card.route);
-                  },
-                );
-              },
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bienvenido',
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
-          ),
-        ],
+
+            const SizedBox(height: 8),
+
+            Text(
+              'Selecciona una opción para administrar QuizApp.',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+
+            const SizedBox(height: 28),
+
+            Wrap(
+              spacing: 20,
+              runSpacing: 20,
+              children: cards.map((card) {
+                return SizedBox(
+                  width: cardWidth,
+                  child: DashboardOptionCard(
+                    icon: card.icon,
+                    title: card.title,
+                    description: card.description,
+                    onPressed: () {
+                      context.go(card.route);
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }

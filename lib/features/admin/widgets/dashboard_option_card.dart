@@ -21,17 +21,16 @@ class DashboardOptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             Icon(
               icon,
-              size: 48,
+              size: 54,
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             Text(
               title,
@@ -39,19 +38,19 @@ class DashboardOptionCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleLarge,
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
             Text(
               description,
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
               child: PrimaryButton(
-                text: "Abrir",
+                text: 'Abrir',
                 icon: Icons.arrow_forward,
                 onPressed: onPressed,
               ),
