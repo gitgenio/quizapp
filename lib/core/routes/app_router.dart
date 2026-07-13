@@ -7,6 +7,10 @@ import '../../features/admin/screens/quiz_form_screen.dart';
 import '../../features/admin/screens/quiz_list_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/player/screens/finish_screen.dart';
+import '../../features/player/screens/join_quiz_screen.dart';
+import '../../features/player/screens/quiz_screen.dart';
+import '../../features/player/screens/waiting_screen.dart';
 import '../../shared/widgets/placeholder_screen.dart';
 import 'app_routes.dart';
 
@@ -51,31 +55,27 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.join,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Ingresar al Quiz'),
+      builder: (_, __) => const JoinQuizScreen(),
     ),
 
     GoRoute(
       path: AppRoutes.waiting,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Sala de Espera'),
+      builder: (_, __) => const WaitingScreen(),
     ),
 
     GoRoute(
       path: AppRoutes.quiz,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Quiz'),
+      builder: (_, __) => const QuizScreen(),
+    ),
+
+    GoRoute(
+      path: AppRoutes.finish,
+      builder: (_, __) => const FinishScreen(),
     ),
 
     GoRoute(
       path: AppRoutes.quizList,
       builder: (_, __) => QuizListScreen(),
-    ),
-
-    GoRoute(
-      path: AppRoutes.finish,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Finalización'),
     ),
 
     GoRoute(
