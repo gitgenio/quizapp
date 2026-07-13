@@ -13,7 +13,6 @@ import '../../features/player/screens/quiz_screen.dart';
 import '../../features/player/screens/waiting_screen.dart';
 import '../../features/results/screens/results_screen.dart';
 import '../../features/results/screens/statistics_screen.dart';
-import '../../shared/widgets/placeholder_screen.dart';
 import 'app_routes.dart';
 
 final GoRouter appRouter = GoRouter(

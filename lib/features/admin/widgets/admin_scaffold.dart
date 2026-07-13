@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
+import '../../../core/utils/responsive.dart';
 import 'admin_navigation.dart';
 
 class AdminScaffold extends StatelessWidget {
@@ -51,9 +52,13 @@ class AdminScaffold extends StatelessWidget {
             child: SafeArea(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
+                  constraints: BoxConstraints(
+                    maxWidth: Responsive.maxContentWidth(context),
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(
+                      Responsive.pagePadding(context),
+                    ),
                     child: child,
                   ),
                 ),

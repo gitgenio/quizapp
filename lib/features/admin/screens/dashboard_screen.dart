@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
-import '../../../shared/widgets/app_scaffold.dart';
-import '../../../shared/widgets/section_title.dart';
+import '../../../core/utils/responsive.dart';
 import '../widgets/admin_scaffold.dart';
 import '../widgets/dashboard_option_card.dart';
 
@@ -12,64 +11,79 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cards = [
+      (
+      icon: Icons.quiz_outlined,
+      title: 'Quizzes',
+      description: 'Crear y administrar cuestionarios.',
+      route: AppRoutes.quizList,
+      ),
+      (
+      icon: Icons.help_outline,
+      title: 'Preguntas',
+      description: 'Administrar banco de preguntas.',
+      route: AppRoutes.questionList,
+      ),
+      (
+      icon: Icons.password_outlined,
+      title: 'Código de Acceso',
+      description: 'Generar y compartir códigos.',
+      route: AppRoutes.accessCode,
+      ),
+      (
+      icon: Icons.bar_chart_outlined,
+      title: 'Resultados',
+      description: 'Consultar resultados y estadísticas.',
+      route: AppRoutes.results,
+      ),
+    ];
+
+    final columns = Responsive.dashboardColumns(context);
+
     return AdminScaffold(
       title: 'Dashboard',
       selectedIndex: 0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionTitle(
-            title: 'Bienvenido',
-            subtitle: 'Selecciona una opción para administrar QuizApp.',
+          Text(
+            'Bienvenido',
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 8),
+
+          Text(
+            'Selecciona una opción para administrar QuizApp.',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+
+          const SizedBox(height: 24),
 
           Expanded(
-            child: GridView.count(
-              crossAxisCount:
-              MediaQuery.of(context).size.width > 850 ? 2 : 1,
+            child: GridView.builder(
+              itemCount: cards.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
 
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 2.1,
-              children: [
-                DashboardOptionCard(
-                  icon: Icons.quiz_outlined,
-                  title: 'Quizzes',
-                  description:
-                  'Crear y administrar cuestionarios.',
-                  onPressed: () =>
-                      context.go(AppRoutes.quizList),
-                ),
+                // Muy importante para evitar overflows
+                childAspectRatio:
+                Responsive.isMobile(context) ? 1.05 : 1.18,
+              ),
+              itemBuilder: (context, index) {
+                final card = cards[index];
 
-                DashboardOptionCard(
-                  icon: Icons.help_outline,
-                  title: 'Preguntas',
-                  description:
-                  'Administrar banco de preguntas.',
-                  onPressed: () =>
-                      context.go(AppRoutes.questionList),
-                ),
-
-                DashboardOptionCard(
-                  icon: Icons.password,
-                  title: 'Código de Acceso',
-                  description:
-                  'Generar código para participantes.',
-                  onPressed: () =>
-                      context.go(AppRoutes.accessCode),
-                ),
-
-                DashboardOptionCard(
-                  icon: Icons.bar_chart,
-                  title: 'Resultados',
-                  description:
-                  'Consultar resultados y estadísticas.',
-                  onPressed: () =>
-                      context.go(AppRoutes.results),
-                ),
-              ],
+                return DashboardOptionCard(
+                  icon: card.icon,
+                  title: card.title,
+                  description: card.description,
+                  onPressed: () {
+                    context.go(card.route);
+                  },
+                );
+              },
             ),
           ),
         ],
