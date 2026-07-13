@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
+import '../../features/admin/screens/access_code_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
+import '../../features/admin/screens/question_form_screen.dart';
 import '../../features/admin/screens/question_list_screen.dart';
 import '../../features/admin/screens/quiz_form_screen.dart';
 import '../../features/admin/screens/quiz_list_screen.dart';
@@ -45,14 +47,12 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.questionForm,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Formulario Pregunta'),
+      builder: (_, __) => const QuestionFormScreen(),
     ),
 
     GoRoute(
       path: AppRoutes.accessCode,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Código de Acceso'),
+      builder: (_, __) => const AccessCodeScreen(),
     ),
 
     GoRoute(
