@@ -11,6 +11,8 @@ import '../../features/player/screens/finish_screen.dart';
 import '../../features/player/screens/join_quiz_screen.dart';
 import '../../features/player/screens/quiz_screen.dart';
 import '../../features/player/screens/waiting_screen.dart';
+import '../../features/results/screens/results_screen.dart';
+import '../../features/results/screens/statistics_screen.dart';
 import '../../shared/widgets/placeholder_screen.dart';
 import 'app_routes.dart';
 
@@ -80,14 +82,12 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.results,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Resultados'),
+      builder: (_, __) => ResultsScreen(),
     ),
 
     GoRoute(
       path: AppRoutes.statistics,
-      builder: (_, __) =>
-      const PlaceholderScreen(title: 'Estadísticas'),
+      builder: (_, __) => const StatisticsScreen(),
     ),
   ],
 );
