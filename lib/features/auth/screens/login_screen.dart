@@ -79,14 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     text: 'Iniciar sesión',
                     icon: Icons.login,
                     onPressed: () {
-                      context.go(AppRoutes.dashboard);
+                      context.push(AppRoutes.dashboard);
                     },
                   ),
 
                   const SizedBox(height: 12),
 
                   TextButton.icon(
-                    onPressed: () => context.go(AppRoutes.home),
+                    onPressed: () => context.push(AppRoutes.home),
                     icon: const Icon(Icons.arrow_back),
                     label: const Text('Volver al inicio'),
                   ),

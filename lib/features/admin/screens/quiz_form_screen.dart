@@ -73,7 +73,7 @@ class _QuizFormScreenState extends State<QuizFormScreen> {
               text: "Guardar Quiz",
               icon: Icons.save,
               onPressed: () {
-                context.go(AppRoutes.questionList);
+                context.push(AppRoutes.questionList);
               },
             ),
           ],

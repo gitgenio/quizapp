@@ -83,7 +83,7 @@ class DashboardScreen extends StatelessWidget {
                     title: card.title,
                     description: card.description,
                     onPressed: () {
-                      context.go(card.route);
+                      context.push(card.route);
                     },
                   ),
                 );

@@ -40,7 +40,7 @@ class QuizListScreen extends StatelessWidget {
             subtitle: 'Administra todos tus cuestionarios.',
             action: FilledButton.icon(
               onPressed: () {
-                context.go(AppRoutes.quizForm);
+                context.push(AppRoutes.quizForm);
               },
               icon: const Icon(Icons.add),
               label: const Text('Nuevo Quiz'),
@@ -61,13 +61,13 @@ class QuizListScreen extends StatelessWidget {
                   questions: quiz["questions"],
                   active: quiz["active"],
                   onEdit: () {
-                    context.go(AppRoutes.quizForm);
+                    context.push(AppRoutes.quizForm);
                   },
                   onQuestions: () {
-                    context.go(AppRoutes.questionList);
+                    context.push(AppRoutes.questionList);
                   },
                   onAccess: () {
-                    context.go(AppRoutes.accessCode);
+                    context.push(AppRoutes.accessCode);
                   },
                 );
               },

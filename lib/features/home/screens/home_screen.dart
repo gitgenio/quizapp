@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
                         'Crear quizzes, administrar preguntas y revisar resultados.',
                         buttonText: 'Ingresar',
                         onPressed: () {
-                          context.go('/login');
+                          context.push('/login');
                         },
                       ),
 
@@ -52,7 +52,7 @@ class HomeScreen extends StatelessWidget {
                         'Ingresa un código y responde el cuestionario.',
                         buttonText: 'Comenzar',
                         onPressed: () {
-                          context.go('/join');
+                          context.push('/join');
                         },
                       ),
                     ],
@@ -69,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                           'Crear quizzes, administrar preguntas y revisar resultados.',
                           buttonText: 'Ingresar',
                           onPressed: () {
-                            context.go(AppRoutes.login);
+                            context.push(AppRoutes.login);
                           },
                         ),
                       ),
@@ -84,7 +84,7 @@ class HomeScreen extends StatelessWidget {
                           'Ingresa un código y responde el cuestionario.',
                           buttonText: 'Comenzar',
                           onPressed: () {
-                            context.go(AppRoutes.join);
+                            context.push(AppRoutes.join);
                           },
                         ),
                       ),
