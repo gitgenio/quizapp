@@ -80,7 +80,7 @@ class ResultsScreen extends StatelessWidget {
               text: 'Ver Estadísticas',
               icon: Icons.bar_chart,
               onPressed: () {
-                context.go(AppRoutes.statistics);
+                context.push(AppRoutes.statistics);
               },
             ),
           )

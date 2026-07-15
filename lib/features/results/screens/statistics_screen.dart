@@ -63,7 +63,7 @@ class StatisticsScreen extends StatelessWidget {
               text: 'Volver al Dashboard',
               icon: Icons.home,
               onPressed: () {
-                context.go(AppRoutes.dashboard);
+                context.push(AppRoutes.dashboard);
               },
             )
           ],
