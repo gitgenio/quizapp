@@ -31,42 +31,48 @@ class _JoinQuizScreenState extends State<JoinQuizScreen> {
     return AppScaffold(
       title: "Unirse al Quiz",
       child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: AppCard(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+        // 1. Envolvemos el contenido en un scroll interactivo pero ajustado
+        child: SingleChildScrollView(
+          // Añade un pequeño padding para que al scrollear con el teclado abierto no quede pegado a los bordes
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: AppCard(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SectionTitle(
+                    title: "Ingresar al Quiz",
+                    subtitle: "Escribe el código y tu nombre.",
+                  ),
 
-                const SectionTitle(
-                  title: "Ingresar al Quiz",
-                  subtitle: "Escribe el código y tu nombre.",
-                ),
+                  const SizedBox(height: 30),
 
-                const SizedBox(height: 30),
+                  CustomTextField(
+                    label: "Código",
+                    controller: _codeController,
+                  ),
 
-                CustomTextField(
-                  label: "Código",
-                  controller: _codeController,
-                ),
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 20),
+                  CustomTextField(
+                    label: "Nombre",
+                    controller: _nameController,
+                  ),
 
-                CustomTextField(
-                  label: "Nombre",
-                  controller: _nameController,
-                ),
+                  const SizedBox(height: 30),
 
-                const SizedBox(height: 30),
-
-                PrimaryButton(
-                  text: "Unirse",
-                  icon: Icons.login,
-                  onPressed: () {
-                    context.go(AppRoutes.waiting);
-                  },
-                )
-              ],
+                  PrimaryButton(
+                    text: "Unirse",
+                    icon: Icons.login,
+                    onPressed: () {
+                      // 2. OJO: Cambiado de .go a .push para conservar la pila de navegación
+                      // y que el botón de atrás no rompa el historial.
+                      context.push(AppRoutes.waiting);
+                    },
+                  )
+                ],
+              ),
             ),
           ),
         ),
