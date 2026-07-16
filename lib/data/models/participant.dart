@@ -48,9 +48,9 @@ class Participant extends Equatable {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'userId': userId,
-      'quizId': quizId,
-      'displayName': displayName,
+      'user_id': userId,
+      'quiz_id': quizId,
+      'display_name': displayName,
       'status': status.name,
     };
   }
@@ -58,9 +58,9 @@ class Participant extends Equatable {
   factory Participant.fromMap(Map<String, dynamic> map) {
     return Participant(
       id: map['id'] as String,
-      userId: map['userId'] as String,
-      quizId: map['quizId'] as String,
-      displayName: map['displayName'] as String,
+      userId: map['user_id'] as String,
+      quizId: map['quiz_id'] as String,
+      displayName: map['display_name'] as String,
       status: ParticipantStatus.values.firstWhere(
             (value) => value.name == map['status'],
       ),

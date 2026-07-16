@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // <-- AGREGADO: Necesario para SystemChannels
 import 'package:go_router/go_router.dart';
@@ -42,9 +44,15 @@ class HomeScreen extends StatelessWidget {
         final shouldClose = await _showExitConfirmationDialog(context);
 
         // Si confirma, cerramos la aplicación de forma limpia para evitar la pantalla negra
+        // Si confirma, cerramos la aplicación de forma definitiva
         if (shouldClose && context.mounted) {
-          await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+          if (Platform.isAndroid) {
+            exit(0); // Matar el proceso en Android evita la pantalla negra
+          } else {
+            await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+          }
         }
+
       },
       child: AppScaffold(
         title: 'QuizApp',

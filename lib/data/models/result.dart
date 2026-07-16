@@ -46,9 +46,9 @@ class Result extends Equatable {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'participantId': participantId,
-      'quizId': quizId,
-      'correctAnswers': correctAnswers,
+      'participant_id': participantId,
+      'quiz_id': quizId,
+      'correct_answers': correctAnswers,
       'score': score,
     };
   }
@@ -56,9 +56,9 @@ class Result extends Equatable {
   factory Result.fromMap(Map<String, dynamic> map) {
     return Result(
       id: map['id'] as String,
-      participantId: map['participantId'] as String,
-      quizId: map['quizId'] as String,
-      correctAnswers: map['correctAnswers'] as int,
+      participantId: map['participant_id'] as String,
+      quizId: map['quiz_id'] as String,
+      correctAnswers: map['correct_answers'] as int,
       score: map['score'] as int,
     );
   }

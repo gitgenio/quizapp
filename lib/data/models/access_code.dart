@@ -38,7 +38,7 @@ class AccessCode extends Equatable {
     return {
       'id': id,
       'code': code,
-      'quizId': quizId,
+      'quiz_id': quizId,
     };
   }
 
@@ -47,7 +47,7 @@ class AccessCode extends Equatable {
     return AccessCode(
       id: map['id'] as String,
       code: map['code'] as String,
-      quizId: map['quizId'] as String,
+      quizId: map['quiz_id'] as String,
     );
   }
 

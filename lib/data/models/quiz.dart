@@ -53,7 +53,7 @@ class Quiz extends Equatable {
       'id': id,
       'title': title,
       'description': description,
-      'createdBy': createdBy,
+      'created_by': createdBy,
       'status': status.name,
     };
   }
@@ -64,7 +64,7 @@ class Quiz extends Equatable {
       id: map['id'] as String,
       title: map['title'] as String,
       description: map['description'] as String,
-      createdBy: map['createdBy'] as String,
+      createdBy: map['created_by'] as String,
       status: QuizStatus.values.firstWhere(
             (value) => value.name == map['status'],
       ),

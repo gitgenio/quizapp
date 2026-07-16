@@ -42,19 +42,19 @@ class Answer extends Equatable {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'participantId': participantId,
-      'questionId': questionId,
-      'selectedOption': selectedOption.name,
+      'participant_id': participantId,
+      'question_id': questionId,
+      'selected_option': selectedOption.name,
     };
   }
 
   factory Answer.fromMap(Map<String, dynamic> map) {
     return Answer(
       id: map['id'] as String,
-      participantId: map['participantId'] as String,
-      questionId: map['questionId'] as String,
+      participantId: map['participant_id'] as String,
+      questionId: map['question_id'] as String,
       selectedOption: AnswerOption.values.firstWhere(
-            (value) => value.name == map['selectedOption'],
+            (value) => value.name == map['selected_option'],
       ),
     );
   }
