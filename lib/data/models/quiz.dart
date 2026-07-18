@@ -12,21 +12,21 @@ class Quiz extends Equatable {
   /// Título del Quiz.
   final String title;
 
-  /// Descripción del Quiz.
-  final String description;
-
   /// Usuario que creó el Quiz.
   final String createdBy;
 
   /// Estado actual del Quiz.
   final QuizStatus status;
 
+  /// Código que utilizarán los participantes para ingresar.
+  final String accessCode;
+
   const Quiz({
     required this.id,
     required this.title,
-    required this.description,
     required this.createdBy,
     required this.status,
+    required this.accessCode,
   });
 
   /// Crea una copia del objeto modificando únicamente
@@ -34,16 +34,16 @@ class Quiz extends Equatable {
   Quiz copyWith({
     String? id,
     String? title,
-    String? description,
     String? createdBy,
     QuizStatus? status,
+    String? accessCode,
   }) {
     return Quiz(
       id: id ?? this.id,
       title: title ?? this.title,
-      description: description ?? this.description,
       createdBy: createdBy ?? this.createdBy,
       status: status ?? this.status,
+      accessCode: accessCode ?? this.accessCode,
     );
   }
 
@@ -52,9 +52,9 @@ class Quiz extends Equatable {
     return {
       'id': id,
       'title': title,
-      'description': description,
       'created_by': createdBy,
       'status': status.name,
+      'access_code': accessCode,
     };
   }
 
@@ -63,11 +63,11 @@ class Quiz extends Equatable {
     return Quiz(
       id: map['id'] as String,
       title: map['title'] as String,
-      description: map['description'] as String,
       createdBy: map['created_by'] as String,
       status: QuizStatus.values.firstWhere(
             (value) => value.name == map['status'],
       ),
+      accessCode: map['access_code'] as String,
     );
   }
 
@@ -82,8 +82,8 @@ class Quiz extends Equatable {
   List<Object> get props => [
     id,
     title,
-    description,
     createdBy,
     status,
+    accessCode,
   ];
 }
