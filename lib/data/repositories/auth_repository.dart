@@ -1,11 +1,76 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/supabase_service.dart';
+import '../models/app_user.dart';
+import '../models/enums/user_role.dart';
 
 /// Repositorio encargado de las operaciones relacionadas
-/// con autenticación y administración de usuarios.
+/// con autenticación y usuarios.
 class AuthRepository {
   const AuthRepository();
+
+  /// Inicia sesión con correo electrónico y contraseña.
+  Future<AuthResponse> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return SupabaseService.client.auth.signInWithPassword(
+      email: email.trim().toLowerCase(),
+      password: password,
+    );
+  }
+
+  /// Cierra la sesión del usuario actual.
+  Future<void> signOut() async {
+    await SupabaseService.client.auth.signOut();
+  }
+
+  /// Devuelve el usuario autenticado actualmente.
+  ///
+  /// Retorna null si no existe una sesión activa.
+  User? getCurrentUser() {
+    return SupabaseService.client.auth.currentUser;
+  }
+
+  /// Obtiene el perfil del usuario autenticado.
+  ///
+  /// Retorna null si no existe una sesión activa
+  /// o si el perfil no existe.
+  Future<AppUser?> getCurrentUserProfile() async {
+    final user = getCurrentUser();
+
+    if (user == null) {
+      return null;
+    }
+
+    final data = await SupabaseService.client
+        .from('profiles')
+        .select()
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (data == null) {
+      return null;
+    }
+
+    return AppUser.fromMap(data);
+  }
+
+  /// Devuelve el rol del usuario autenticado.
+  ///
+  /// Retorna null si no existe una sesión o un perfil.
+  Future<UserRole?> getCurrentUserRole() async {
+    final profile = await getCurrentUserProfile();
+
+    return profile?.role;
+  }
+
+  /// Indica si el usuario autenticado es SuperAdmin.
+  Future<bool> isSuperAdmin() async {
+    final role = await getCurrentUserRole();
+
+    return role == UserRole.superAdmin;
+  }
 
   /// Crea un nuevo profesor mediante la Edge Function
   /// `create-user`.
