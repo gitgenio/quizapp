@@ -1,5 +1,8 @@
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../features/admin/screens/access_code_screen.dart';
+import '../../features/admin/screens/create_administrator_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
 import '../../features/admin/screens/question_form_screen.dart';
 import '../../features/admin/screens/question_list_screen.dart';
@@ -17,8 +20,45 @@ import 'app_routes.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.home,
-  routes: [
 
+  redirect: (context, state) {
+    final session =
+        Supabase.instance.client.auth.currentSession;
+
+    final isLoggedIn = session != null;
+
+    final location = state.matchedLocation;
+
+    final isLoginRoute =
+        location == AppRoutes.login;
+
+    final isAdminRoute =
+        location == AppRoutes.dashboard ||
+            location == AppRoutes.createAdministrator ||
+            location == AppRoutes.quizForm ||
+            location == AppRoutes.questionList ||
+            location == AppRoutes.questionForm ||
+            location == AppRoutes.accessCode ||
+            location == AppRoutes.quizList ||
+            location == AppRoutes.results ||
+            location == AppRoutes.statistics;
+
+    // Usuario no autenticado intenta acceder
+    // a una ruta administrativa.
+    if (!isLoggedIn && isAdminRoute) {
+      return AppRoutes.login;
+    }
+
+    // Usuario autenticado intenta volver al login.
+    if (isLoggedIn && isLoginRoute) {
+      return AppRoutes.dashboard;
+    }
+
+    // No es necesario redireccionar.
+    return null;
+  },
+
+  routes: [
     GoRoute(
       path: AppRoutes.home,
       builder: (_, __) => const HomeScreen(),
@@ -26,12 +66,18 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.login,
-      builder: (_, __) => LoginScreen(),
+      builder: (_, __) => const LoginScreen(),
     ),
 
     GoRoute(
       path: AppRoutes.dashboard,
       builder: (_, __) => const DashboardScreen(),
+    ),
+
+    GoRoute(
+      path: AppRoutes.createAdministrator,
+      builder: (_, __) =>
+      const CreateAdministratorScreen(),
     ),
 
     GoRoute(
