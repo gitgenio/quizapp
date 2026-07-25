@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
 import '../../../core/utils/responsive.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../widgets/admin_scaffold.dart';
 import '../widgets/dashboard_option_card.dart';
 
@@ -38,12 +39,26 @@ class DashboardScreen extends StatelessWidget {
       ),
     ];
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    // Solo el SuperAdmin puede crear profesores.
+    if (authController.isSuperAdmin) {
+      cards.add(
+        (
+        icon: Icons.person_add_outlined,
+        title: 'Crear profesor',
+        description:
+        'Registrar un nuevo profesor en QuizApp.',
+        route: AppRoutes.createAdministrator,
+        ),
+      );
+    }
+
+    final screenWidth =
+        MediaQuery.of(context).size.width;
 
     double cardWidth;
 
     if (Responsive.isDesktop(context)) {
-      // Dos tarjetas por fila
+      // Dos tarjetas por fila.
       cardWidth = (screenWidth - 380) / 2;
     } else if (Responsive.isTablet(context)) {
       cardWidth = (screenWidth - 160) / 2;
@@ -56,18 +71,23 @@ class DashboardScreen extends StatelessWidget {
       selectedIndex: 0,
       child: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
           children: [
             Text(
               'Bienvenido',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium,
             ),
 
             const SizedBox(height: 8),
 
             Text(
               'Selecciona una opción para administrar QuizApp.',
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge,
             ),
 
             const SizedBox(height: 28),

@@ -3,13 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/routes/app_routes.dart';
+import '../../../data/models/enums/user_role.dart';
+import '../../../data/repositories/auth_repository.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/section_title.dart';
-import '../../../data/models/enums/user_role.dart';
-import '../../../data/repositories/auth_repository.dart';
+import '../controllers/auth_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,7 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
-  final AuthRepository _authRepository = const AuthRepository();
+  final AuthRepository _authRepository =
+  const AuthRepository();
 
   bool _isLoading = false;
 
@@ -46,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
+    // Validar campos obligatorios.
     if (email.isEmpty || password.isEmpty) {
       _showMessage(
         'Ingresa tu correo electrónico y contraseña.',
@@ -65,15 +68,15 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
-      // 2. Obtener el perfil del usuario.
+      // 2. Cargar el perfil del usuario autenticado.
       final appUser =
-      await _authRepository.getCurrentUserProfile();
+      await authController.loadCurrentUser();
 
       if (!mounted) return;
 
       // 3. Verificar que exista el perfil.
       if (appUser == null) {
-        await _authRepository.signOut();
+        await authController.signOut();
 
         _showMessage(
           'No se encontró el perfil del usuario.',
@@ -101,12 +104,12 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (error) {
       if (!mounted) return;
 
-      _showMessage(
-        'Ocurrió un error inesperado. Intenta nuevamente.',
-      );
-
       debugPrint(
         'Error inesperado durante el login: $error',
+      );
+
+      _showMessage(
+        'Ocurrió un error inesperado. Intenta nuevamente.',
       );
     } finally {
       if (mounted) {

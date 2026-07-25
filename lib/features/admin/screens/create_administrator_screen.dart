@@ -91,6 +91,15 @@ class _CreateAdministratorScreenState
       return;
     }
 
+    // Validar longitud mínima de la contraseña.
+    if (password.length < 6) {
+      _showMessage(
+        'La contraseña debe tener mínimo 6 caracteres.',
+      );
+
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
