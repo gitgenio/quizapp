@@ -21,15 +21,23 @@ class Quiz extends Equatable {
   /// Código que utilizarán los participantes para ingresar.
   final String accessCode;
 
+  /// Cantidad de preguntas que responderá cada participante.
+  final int questionCount;
+
+  /// Tiempo disponible para responder cada pregunta, en segundos.
+  final int timePerQuestionSeconds;
+
   const Quiz({
     required this.id,
     required this.title,
     required this.createdBy,
     required this.status,
     required this.accessCode,
+    required this.questionCount,
+    required this.timePerQuestionSeconds,
   });
 
-  /// Crea una copia del objeto modificando únicamente
+  /// Crea una copia del Quiz modificando únicamente
   /// las propiedades indicadas.
   Quiz copyWith({
     String? id,
@@ -37,6 +45,8 @@ class Quiz extends Equatable {
     String? createdBy,
     QuizStatus? status,
     String? accessCode,
+    int? questionCount,
+    int? timePerQuestionSeconds,
   }) {
     return Quiz(
       id: id ?? this.id,
@@ -44,6 +54,9 @@ class Quiz extends Equatable {
       createdBy: createdBy ?? this.createdBy,
       status: status ?? this.status,
       accessCode: accessCode ?? this.accessCode,
+      questionCount: questionCount ?? this.questionCount,
+      timePerQuestionSeconds:
+      timePerQuestionSeconds ?? this.timePerQuestionSeconds,
     );
   }
 
@@ -55,6 +68,8 @@ class Quiz extends Equatable {
       'created_by': createdBy,
       'status': status.name,
       'access_code': accessCode,
+      'question_count': questionCount,
+      'time_per_question_seconds': timePerQuestionSeconds,
     };
   }
 
@@ -68,6 +83,9 @@ class Quiz extends Equatable {
             (value) => value.name == map['status'],
       ),
       accessCode: map['access_code'] as String,
+      questionCount: map['question_count'] as int,
+      timePerQuestionSeconds:
+      map['time_per_question_seconds'] as int,
     );
   }
 
@@ -85,5 +103,7 @@ class Quiz extends Equatable {
     createdBy,
     status,
     accessCode,
+    questionCount,
+    timePerQuestionSeconds,
   ];
 }
