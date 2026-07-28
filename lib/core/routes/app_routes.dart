@@ -16,6 +16,8 @@ class AppRoutes {
 
   static const accessCode = '/admin/access-code';
 
+  static const String questionImport = '/question-import';
+
   // Ruta exclusiva para SuperAdmin
   static const createAdministrator =
       '/admin/create-administrator';
