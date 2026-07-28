@@ -7,80 +7,143 @@ import '../../features/admin/screens/create_administrator_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
 import '../../features/admin/screens/question_form_screen.dart';
 import '../../features/admin/screens/question_list_screen.dart';
-import '../../features/quiz/screens/quiz_form_screen.dart';
-import '../../features/quiz/screens/quiz_list_screen.dart';
+
 import '../../features/auth/screens/login_screen.dart';
+
 import '../../features/home/screens/home_screen.dart';
+
 import '../../features/player/screens/finish_screen.dart';
 import '../../features/player/screens/join_quiz_screen.dart';
 import '../../features/player/screens/quiz_screen.dart';
 import '../../features/player/screens/waiting_screen.dart';
+
 import '../../features/quiz/screens/question_import_screen.dart';
+import '../../features/quiz/screens/quiz_detail_screen.dart';
+import '../../features/quiz/screens/quiz_form_screen.dart';
+import '../../features/quiz/screens/quiz_list_screen.dart';
+
 import '../../features/results/screens/results_screen.dart';
 import '../../features/results/screens/statistics_screen.dart';
+
 import 'app_routes.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.home,
 
-  redirect: (context, state) {
+  redirect: (
+      context,
+      state,
+      ) {
     final session =
         Supabase.instance.client.auth.currentSession;
 
-    final isLoggedIn = session != null;
+    final isLoggedIn =
+        session != null;
 
-    final location = state.matchedLocation;
+    final location =
+        state.matchedLocation;
 
     final isLoginRoute =
         location == AppRoutes.login;
 
+    // ============================================
+    // RUTAS ADMINISTRATIVAS
+    // ============================================
+
     final isAdminRoute =
         location == AppRoutes.dashboard ||
-            location == AppRoutes.createAdministrator ||
+            location ==
+                AppRoutes.createAdministrator ||
+            location == AppRoutes.quizList ||
             location == AppRoutes.quizForm ||
+            location == AppRoutes.quizDetail ||
             location == AppRoutes.questionList ||
             location == AppRoutes.questionForm ||
+            location == AppRoutes.questionImport ||
             location == AppRoutes.accessCode ||
-            location == AppRoutes.quizList ||
             location == AppRoutes.results ||
             location == AppRoutes.statistics;
 
-    // Usuario no autenticado intenta acceder
-    // a una ruta administrativa.
+    // ============================================
+    // USUARIO NO AUTENTICADO
+    // ============================================
+
     if (!isLoggedIn && isAdminRoute) {
       return AppRoutes.login;
     }
 
-    // Usuario autenticado intenta volver al login.
+    // ============================================
+    // USUARIO AUTENTICADO INTENTA IR AL LOGIN
+    // ============================================
+
     if (isLoggedIn && isLoginRoute) {
       return AppRoutes.dashboard;
     }
 
-    // No es necesario redireccionar.
     return null;
   },
 
   routes: [
+
+    // ============================================
+    // HOME
+    // ============================================
+
     GoRoute(
       path: AppRoutes.home,
-      builder: (_, __) => const HomeScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return const HomeScreen();
+      },
     ),
+
+    // ============================================
+    // LOGIN
+    // ============================================
 
     GoRoute(
       path: AppRoutes.login,
-      builder: (_, __) => const LoginScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return const LoginScreen();
+      },
     ),
+
+    // ============================================
+    // DASHBOARD
+    // ============================================
 
     GoRoute(
       path: AppRoutes.dashboard,
-      builder: (_, __) => const DashboardScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return const DashboardScreen();
+      },
     ),
+
+    // ============================================
+    // CREAR ADMINISTRADOR
+    // ============================================
 
     GoRoute(
       path: AppRoutes.createAdministrator,
-      builder: (_, __) =>
-      const CreateAdministratorScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return const CreateAdministratorScreen();
+      },
     ),
+
+    // ============================================
+    // CREAR QUIZ
+    // ============================================
 
     GoRoute(
       path: AppRoutes.quizForm,
@@ -92,66 +155,108 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
+    // ============================================
+    // DETALLE DEL QUIZ
+    // ============================================
+
+    GoRoute(
+      path: AppRoutes.quizDetail,
+      builder: (
+          context,
+          state,
+          ) {
+        final quizId =
+        state.uri.queryParameters['quizId'];
+
+        if (quizId == null ||
+            quizId.isEmpty) {
+          return const Scaffold(
+            body: Center(
+              child: Text(
+                'No se especificó el Quiz.',
+              ),
+            ),
+          );
+        }
+
+        return QuizDetailScreen(
+          quizId: quizId,
+        );
+      },
+    ),
+
+    // ============================================
+    // LISTA DE PREGUNTAS
+    // ============================================
+
     GoRoute(
       path: AppRoutes.questionList,
-      builder: (_, __) => QuestionListScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return QuestionListScreen();
+      },
     ),
+
+    // ============================================
+    // FORMULARIO DE PREGUNTA
+    // ============================================
 
     GoRoute(
       path: AppRoutes.questionForm,
-      builder: (_, __) => const QuestionFormScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return const QuestionFormScreen();
+      },
     ),
 
-
+    // ============================================
+    // CÓDIGO DE ACCESO
+    // ============================================
 
     GoRoute(
       path: AppRoutes.accessCode,
-      builder: (_, __) => const AccessCodeScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return const AccessCodeScreen();
+      },
     ),
 
-    GoRoute(
-      path: AppRoutes.join,
-      builder: (_, __) => const JoinQuizScreen(),
-    ),
-
-    GoRoute(
-      path: AppRoutes.waiting,
-      builder: (_, __) => const WaitingScreen(),
-    ),
-
-    GoRoute(
-      path: AppRoutes.quiz,
-      builder: (_, __) => const QuizScreen(),
-    ),
-
-    GoRoute(
-      path: AppRoutes.finish,
-      builder: (_, __) => const FinishScreen(),
-    ),
+    // ============================================
+    // LISTA DE QUIZZES
+    // ============================================
 
     GoRoute(
       path: AppRoutes.quizList,
-      builder: (_, __) => QuizListScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return QuizListScreen();
+      },
     ),
 
-    GoRoute(
-      path: AppRoutes.results,
-      builder: (_, __) => ResultsScreen(),
-    ),
+    // ============================================
+    // IMPORTAR PREGUNTAS DESDE EXCEL
+    // ============================================
 
     GoRoute(
-      path: AppRoutes.statistics,
-      builder: (_, __) => const StatisticsScreen(),
-    ),
-
-    GoRoute(
-      path: '/question-import',
-      builder: (context, state) {
+      path: AppRoutes.questionImport,
+      builder: (
+          context,
+          state,
+          ) {
         final quizId =
         state.uri.queryParameters['quizId'];
 
         final questionCountString =
-        state.uri.queryParameters['questionCount'];
+        state.uri.queryParameters[
+        'questionCount'];
 
         final questionCount =
         int.tryParse(
@@ -172,8 +277,93 @@ final GoRouter appRouter = GoRouter(
 
         return QuestionImportScreen(
           quizId: quizId,
-          requiredQuestionCount: questionCount,
+          requiredQuestionCount:
+          questionCount,
         );
+      },
+    ),
+
+    // ============================================
+    // UNIRSE A QUIZ
+    // ============================================
+
+    GoRoute(
+      path: AppRoutes.join,
+      builder: (
+          context,
+          state,
+          ) {
+        return const JoinQuizScreen();
+      },
+    ),
+
+    // ============================================
+    // ESPERA
+    // ============================================
+
+    GoRoute(
+      path: AppRoutes.waiting,
+      builder: (
+          context,
+          state,
+          ) {
+        return const WaitingScreen();
+      },
+    ),
+
+    // ============================================
+    // QUIZ DEL PARTICIPANTE
+    // ============================================
+
+    GoRoute(
+      path: AppRoutes.quiz,
+      builder: (
+          context,
+          state,
+          ) {
+        return const QuizScreen();
+      },
+    ),
+
+    // ============================================
+    // FINALIZAR QUIZ
+    // ============================================
+
+    GoRoute(
+      path: AppRoutes.finish,
+      builder: (
+          context,
+          state,
+          ) {
+        return const FinishScreen();
+      },
+    ),
+
+    // ============================================
+    // RESULTADOS
+    // ============================================
+
+    GoRoute(
+      path: AppRoutes.results,
+      builder: (
+          context,
+          state,
+          ) {
+        return ResultsScreen();
+      },
+    ),
+
+    // ============================================
+    // ESTADÍSTICAS
+    // ============================================
+
+    GoRoute(
+      path: AppRoutes.statistics,
+      builder: (
+          context,
+          state,
+          ) {
+        return const StatisticsScreen();
       },
     ),
   ],

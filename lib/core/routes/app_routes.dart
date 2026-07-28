@@ -1,35 +1,59 @@
 class AppRoutes {
   AppRoutes._();
 
-  // Rutas públicas
+  // ============================================
+  // RUTAS PÚBLICAS
+  // ============================================
+
   static const home = '/';
   static const login = '/login';
 
-  // Rutas administrativas
+  // ============================================
+  // RUTAS ADMINISTRATIVAS
+  // ============================================
+
   static const dashboard = '/dashboard';
 
   static const quizList = '/admin/quizzes';
+
   static const quizForm = '/admin/quiz-form';
-  static const String quizDetail = '/quiz-detail';
+
+  static const quizDetail = '/admin/quiz-detail';
 
   static const questionList = '/admin/questions';
+
   static const questionForm = '/admin/question-form';
 
-  static const accessCode = '/admin/access-code';
+  static const questionImport =
+      '/admin/question-import';
 
-  static const String questionImport = '/question-import';
+  static const accessCode =
+      '/admin/access-code';
 
-  // Ruta exclusiva para SuperAdmin
+  // ============================================
+  // RUTA EXCLUSIVA PARA SUPERADMIN
+  // ============================================
+
   static const createAdministrator =
       '/admin/create-administrator';
 
-  // Rutas del participante
+  // ============================================
+  // RUTAS DEL PARTICIPANTE
+  // ============================================
+
   static const join = '/join';
+
   static const waiting = '/waiting';
+
   static const quiz = '/quiz';
+
   static const finish = '/finish';
 
-  // Rutas de resultados
+  // ============================================
+  // RUTAS DE RESULTADOS
+  // ============================================
+
   static const results = '/results';
+
   static const statistics = '/statistics';
 }
