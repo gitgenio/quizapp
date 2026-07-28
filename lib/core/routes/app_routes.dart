@@ -10,6 +10,7 @@ class AppRoutes {
 
   static const quizList = '/admin/quizzes';
   static const quizForm = '/admin/quiz-form';
+  static const String quizDetail = '/quiz-detail';
 
   static const questionList = '/admin/questions';
   static const questionForm = '/admin/question-form';
