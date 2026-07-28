@@ -7,7 +7,7 @@ import '../../features/admin/screens/create_administrator_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
 import '../../features/admin/screens/question_form_screen.dart';
 import '../../features/admin/screens/question_list_screen.dart';
-import '../../features/admin/screens/quiz_form_screen.dart';
+import '../../features/quiz/screens/quiz_form_screen.dart';
 import '../../features/quiz/screens/quiz_list_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/home/screens/home_screen.dart';
@@ -84,7 +84,12 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.quizForm,
-      builder: (_, __) => const QuizFormScreen(),
+      builder: (
+          context,
+          state,
+          ) {
+        return const QuizFormScreen();
+      },
     ),
 
     GoRoute(

@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/enums/quiz_status.dart';
 import '../models/quiz.dart';
 
 class QuizRepository {
@@ -14,7 +17,10 @@ class QuizRepository {
     final response = await _supabase
         .from('quizzes')
         .select()
-        .order('created_at', ascending: false);
+        .order(
+      'created_at',
+      ascending: false,
+    );
 
     return (response as List)
         .map(
@@ -39,19 +45,54 @@ class QuizRepository {
     );
   }
 
-  Future<Quiz> createQuiz(
-      Quiz quiz,
-      ) async {
+  Future<Quiz> createQuiz({
+    required String title,
+    required int questionCount,
+    required int timePerQuestionSeconds,
+  }) async {
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'No hay un usuario autenticado.',
+      );
+    }
+
+    final accessCode = _generateAccessCode();
+
+    final data = {
+      'title': title,
+      'created_by': user.id,
+      'status': 'draft',
+      'access_code': accessCode,
+      'question_count': questionCount,
+      'time_per_question_seconds':
+      timePerQuestionSeconds,
+    };
+
     final response = await _supabase
         .from('quizzes')
-        .insert(
-      quiz.toMap(),
-    )
+        .insert(data)
         .select()
         .single();
 
     return Quiz.fromMap(
       Map<String, dynamic>.from(response),
     );
+  }
+
+  String _generateAccessCode() {
+    const characters =
+        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    final random = Random();
+
+    return List.generate(
+      6,
+          (_) => characters[
+      random.nextInt(
+        characters.length,
+      )],
+    ).join();
   }
 }
