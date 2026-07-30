@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/routes/app_routes.dart';
 import '../../../data/models/quiz.dart';
 import '../../../data/repositories/quiz_repository.dart';
-import '../../../core/routes/app_routes.dart';
 
-class QuizDetailScreen
-    extends StatefulWidget {
+class QuizDetailScreen extends StatefulWidget {
   final String quizId;
 
   const QuizDetailScreen({
@@ -30,6 +29,10 @@ class _QuizDetailScreenState
   void initState() {
     super.initState();
 
+    _loadQuiz();
+  }
+
+  void _loadQuiz() {
     _quizFuture =
         _quizRepository.getQuizById(
           widget.quizId,
@@ -37,7 +40,9 @@ class _QuizDetailScreenState
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+      BuildContext context,
+      ) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -62,13 +67,48 @@ class _QuizDetailScreenState
 
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                'No se pudo cargar el Quiz.',
+              child: Padding(
+                padding:
+                const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize:
+                  MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                    ),
+
+                    const SizedBox(
+                      height: 16,
+                    ),
+
+                    const Text(
+                      'No se pudo cargar el Quiz.',
+                    ),
+
+                    const SizedBox(
+                      height: 16,
+                    ),
+
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _loadQuiz();
+                        });
+                      },
+                      child: const Text(
+                        'Reintentar',
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
-          final quiz = snapshot.data;
+          final quiz =
+              snapshot.data;
 
           if (quiz == null) {
             return const Center(
@@ -78,129 +118,108 @@ class _QuizDetailScreenState
             );
           }
 
-          return _buildContent(
-            context,
-            quiz,
+          return SingleChildScrollView(
+            padding:
+            const EdgeInsets.all(24),
+
+            child: Center(
+              child: ConstrainedBox(
+                constraints:
+                const BoxConstraints(
+                  maxWidth: 700,
+                ),
+
+                child: Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment
+                      .stretch,
+
+                  children: [
+                    Text(
+                      quiz.title,
+                      style: Theme.of(
+                        context,
+                      )
+                          .textTheme
+                          .headlineMedium,
+                    ),
+
+                    const SizedBox(
+                      height: 24,
+                    ),
+
+                    Card(
+                      child: Padding(
+                        padding:
+                        const EdgeInsets.all(
+                          20,
+                        ),
+
+                        child: Column(
+                          children: [
+                            _InfoRow(
+                              label:
+                              'Código de acceso',
+                              value:
+                              quiz.accessCode,
+                            ),
+
+                            const Divider(),
+
+                            _InfoRow(
+                              label:
+                              'Preguntas por participante',
+                              value:
+                              '${quiz.questionCount}',
+                            ),
+
+                            const Divider(),
+
+                            _InfoRow(
+                              label:
+                              'Tiempo por pregunta',
+                              value:
+                              '${quiz.timePerQuestionSeconds} segundos',
+                            ),
+
+                            const Divider(),
+
+                            _InfoRow(
+                              label:
+                              'Estado',
+                              value:
+                              quiz.status.name,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height: 24,
+                    ),
+
+                    FilledButton.icon(
+                      onPressed: () {
+                        context.push(
+                          '${AppRoutes.questionImport}'
+                              '?quizId=${quiz.id}'
+                              '&questionCount=${quiz.questionCount}',
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.upload_file,
+                      ),
+                      label: const Text(
+                        'Importar preguntas desde Excel',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildContent(
-      BuildContext context,
-      Quiz quiz,
-      ) {
-    return SingleChildScrollView(
-      padding:
-      const EdgeInsets.all(24),
-
-      child: Center(
-        child: ConstrainedBox(
-          constraints:
-          const BoxConstraints(
-            maxWidth: 800,
-          ),
-
-          child: Column(
-            crossAxisAlignment:
-            CrossAxisAlignment
-                .stretch,
-
-            children: [
-              Text(
-                quiz.title,
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium,
-              ),
-
-              const SizedBox(
-                height: 24,
-              ),
-
-              Card(
-                child: Padding(
-                  padding:
-                  const EdgeInsets.all(20),
-
-                  child: Column(
-                    children: [
-                      _InfoRow(
-                        label: 'Estado',
-                        value:
-                        quiz.status.name,
-                      ),
-
-                      _InfoRow(
-                        label:
-                        'Código de acceso',
-                        value:
-                        quiz.accessCode,
-                      ),
-
-                      _InfoRow(
-                        label:
-                        'Preguntas por participante',
-                        value:
-                        '${quiz.questionCount}',
-                      ),
-
-                      _InfoRow(
-                        label:
-                        'Tiempo por pregunta',
-                        value:
-                        '${quiz.timePerQuestionSeconds} segundos',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(
-                height: 24,
-              ),
-
-              ElevatedButton.icon(
-                onPressed: () {
-                  context.push(
-                    '${AppRoutes.questionImport}'
-                        '?quizId=${quiz.id}'
-                        '&questionCount='
-                        '${quiz.questionCount}',
-                  );
-                },
-
-                icon: const Icon(
-                  Icons.upload_file,
-                ),
-
-                label: const Text(
-                  'Importar preguntas desde Excel',
-                ),
-              ),
-
-              const SizedBox(
-                height: 12,
-              ),
-
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Próximamente:
-                  // Ver preguntas importadas.
-                },
-
-                icon: const Icon(
-                  Icons.list,
-                ),
-
-                label: const Text(
-                  'Ver preguntas',
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -227,6 +246,9 @@ class _InfoRow
       ),
 
       child: Row(
+        crossAxisAlignment:
+        CrossAxisAlignment.start,
+
         children: [
           Expanded(
             child: Text(
@@ -238,10 +260,12 @@ class _InfoRow
             ),
           ),
 
-          Expanded(
-            child: Text(
-              value,
-            ),
+          const SizedBox(
+            width: 16,
+          ),
+
+          Text(
+            value,
           ),
         ],
       ),
