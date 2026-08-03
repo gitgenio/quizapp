@@ -200,6 +200,7 @@ class ExcelValidator {
     question.correctAnswer.trim().toUpperCase();
 
     if (!validAnswerOptions.contains(
+
       normalizedCorrectAnswer,
     )) {
       errors.add(
