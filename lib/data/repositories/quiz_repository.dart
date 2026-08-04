@@ -81,6 +81,13 @@ class QuizRepository {
     );
   }
 
+  // Future<void> deleteQuiz(String id) async {
+  //   await supabase
+  //       .from('quizzes')
+  //       .delete()
+  //       .eq('id', id);
+  // }
+
   String _generateAccessCode() {
     const characters =
         'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
