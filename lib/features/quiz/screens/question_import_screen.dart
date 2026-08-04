@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/models/import_validation_result.dart';
 import '../viewmodels/question_import_view_model.dart';
+import 'import_preview_screen.dart';
 
 class QuestionImportScreen extends StatefulWidget {
   final String quizId;
@@ -32,8 +33,7 @@ class _QuestionImportScreenState
 
   Future<void> _selectFile() async {
     try {
-      final result =
-      await FilePicker.platform.pickFiles(
+      final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
         withData: true,
@@ -49,10 +49,11 @@ class _QuestionImportScreenState
         _showError(
           'No fue posible leer el archivo seleccionado.',
         );
-
         return;
       }
 
+      // 1. Mostramos el indicador de carga
+      if (!mounted) return;
       setState(() {
         _viewModel.isProcessing = true;
         _viewModel.fileName = file.name;
@@ -60,30 +61,32 @@ class _QuestionImportScreenState
         _viewModel.validationResult = null;
       });
 
-      final validationResult =
-      _viewModel.processFile(
+      // 2. Liberamos el microtask de Flutter Web para que el MouseTracker
+      // procese el re-enfoque de la ventana sin chocar con el estado.
+      await Future.delayed(Duration.zero);
+
+      final validationResult = _viewModel.processFile(
         bytes: file.bytes!,
         selectedFileName: file.name,
-        requiredQuestionCount:
-        widget.requiredQuestionCount,
+        requiredQuestionCount: widget.requiredQuestionCount,
       );
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
-      setState(() {});
+      // 3. Envolvemos la actualización final en el siguiente frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
 
-      if (validationResult == null &&
-          _viewModel.processingError != null) {
-        _showError(
-          _viewModel.processingError!,
-        );
-      }
+        setState(() {});
+
+        if (validationResult == null && _viewModel.processingError != null) {
+          _showError(
+            _viewModel.processingError!,
+          );
+        }
+      });
     } catch (e) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       _showError(
         'No fue posible procesar el archivo Excel.',
@@ -556,48 +559,46 @@ class _QuestionImportScreenState
       ImportValidationResult result,
       ) {
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.stretch,
-
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(
           height: 24,
         ),
-
         Container(
-          padding:
-          const EdgeInsets.all(16),
-
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius:
-            BorderRadius.circular(8),
-
-            color: Colors.green
-                .withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.green.withOpacity(0.08),
           ),
-
           child: const Text(
             'Todas las preguntas cumplen '
                 'con las reglas de validación.',
           ),
         ),
-
         const SizedBox(
           height: 20,
         ),
-
         ElevatedButton.icon(
           onPressed: () {
-            // Próximo paso:
-            // mostrar vista previa
-            // y permitir confirmar
-            // la importación.
-          },
+            // Posponemos la navegación al siguiente frame para evitar el choque de layout en Web
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
 
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ImportPreviewScreen(
+                    quizId: widget.quizId,
+                    fileName: _viewModel.fileName ?? 'Archivo Excel',
+                    requiredQuestionCount: widget.requiredQuestionCount,
+                    validationResult: result,
+                  ),
+                ),
+              );
+            });
+          },
           icon: const Icon(
             Icons.preview,
           ),
-
           label: const Text(
             'Ver vista previa',
           ),
