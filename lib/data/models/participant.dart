@@ -4,13 +4,13 @@ import 'package:equatable/equatable.dart';
 
 import 'enums/participant_status.dart';
 
-/// Representa la participación de un usuario en un Quiz.
+/// Representa un participante de un Quiz.
 class Participant extends Equatable {
-  /// Identificador único de la participación.
+  /// Identificador único.
   final String id;
 
-  /// Usuario participante.
-  final String userId;
+  /// Identificador único almacenado en el navegador.
+  final String participantToken;
 
   /// Quiz al que pertenece.
   final String quizId;
@@ -18,52 +18,68 @@ class Participant extends Equatable {
   /// Nombre que se mostrará durante el Quiz.
   final String displayName;
 
+  /// Correo electrónico del participante.
+  final String email;
+
   /// Estado actual del participante.
   final ParticipantStatus status;
 
+  /// Fecha de ingreso al Quiz.
+  final DateTime createdAt;
+
   const Participant({
     required this.id,
-    required this.userId,
+    required this.participantToken,
     required this.quizId,
     required this.displayName,
+    required this.email,
     required this.status,
+    required this.createdAt,
   });
 
   Participant copyWith({
     String? id,
-    String? userId,
+    String? participantToken,
     String? quizId,
     String? displayName,
+    String? email,
     ParticipantStatus? status,
+    DateTime? createdAt,
   }) {
     return Participant(
       id: id ?? this.id,
-      userId: userId ?? this.userId,
+      participantToken: participantToken ?? this.participantToken,
       quizId: quizId ?? this.quizId,
       displayName: displayName ?? this.displayName,
+      email: email ?? this.email,
       status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'user_id': userId,
+      'participant_token': participantToken,
       'quiz_id': quizId,
       'display_name': displayName,
+      'email': email,
       'status': status.name,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 
   factory Participant.fromMap(Map<String, dynamic> map) {
     return Participant(
       id: map['id'] as String,
-      userId: map['user_id'] as String,
+      participantToken: map['participant_token'] as String,
       quizId: map['quiz_id'] as String,
       displayName: map['display_name'] as String,
+      email: map['email'] as String,
       status: ParticipantStatus.values.firstWhere(
             (value) => value.name == map['status'],
       ),
+      createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
 
@@ -75,9 +91,11 @@ class Participant extends Equatable {
   @override
   List<Object> get props => [
     id,
-    userId,
+    participantToken,
     quizId,
     displayName,
+    email,
     status,
+    createdAt,
   ];
 }
