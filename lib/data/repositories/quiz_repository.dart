@@ -88,6 +88,24 @@ class QuizRepository {
   //       .eq('id', id);
   // }
 
+  Future<Quiz?> getQuizByAccessCode(
+      String accessCode,
+      ) async {
+    final response = await _supabase
+        .from('quizzes')
+        .select()
+        .eq('access_code', accessCode.toUpperCase())
+        .maybeSingle();
+
+    if (response == null) {
+      return null;
+    }
+
+    return Quiz.fromMap(
+      Map<String, dynamic>.from(response),
+    );
+  }
+
   String _generateAccessCode() {
     const characters =
         'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
