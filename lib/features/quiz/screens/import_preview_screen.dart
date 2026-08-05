@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/models/import_validation_result.dart';
 import '../../../data/models/parsed_question.dart';
+import '../../../data/repositories/question_repository.dart'; // Ajusta la ruta a tu repositorio
 
-class ImportPreviewScreen extends StatelessWidget {
+class ImportPreviewScreen extends StatefulWidget {
   final String quizId;
   final String fileName;
   final int requiredQuestionCount;
@@ -18,24 +20,72 @@ class ImportPreviewScreen extends StatelessWidget {
   });
 
   @override
+  State<ImportPreviewScreen> createState() => _ImportPreviewScreenState();
+}
+
+class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
+  bool _isLoading = false;
+
+  /// Método para guardar las preguntas en Supabase
+  Future<void> _confirmImport() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final repository = QuestionRepository();
+
+      await repository.createQuestions(
+        quizId: widget.quizId,
+        questions: widget.validationResult.questions,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Preguntas importadas exitosamente!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Regresa a la pantalla anterior indicando éxito (true)
+      Navigator.of(context).pop(true);
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error de Supabase: ${e.message}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error inesperado: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final questions = validationResult.questions;
+    final questions = widget.validationResult.questions;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Vista previa de preguntas',
-        ),
+        title: const Text('Vista previa de preguntas'),
       ),
       body: Column(
         children: [
-          // LISTA DE PREGUNTAS
           Expanded(
             child: questions.isEmpty
                 ? const Center(
-              child: Text(
-                'No hay preguntas para mostrar.',
-              ),
+              child: Text('No hay preguntas para mostrar.'),
             )
                 : ListView.separated(
               padding: const EdgeInsets.all(24),
@@ -51,8 +101,6 @@ class ImportPreviewScreen extends StatelessWidget {
               },
             ),
           ),
-
-          // BARRA INFERIOR
           _buildBottomBar(context),
         ],
       ),
@@ -80,7 +128,7 @@ class ImportPreviewScreen extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(0, 48),
                 ),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancelar'),
               ),
             ),
@@ -90,11 +138,18 @@ class ImportPreviewScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(0, 48),
                 ),
-                onPressed: () {
-                  // Próximo paso: guardar en Supabase
-                },
-                icon: const Icon(Icons.upload),
-                label: const Text('Confirmar importación'),
+                onPressed: _isLoading ? null : _confirmImport,
+                icon: _isLoading
+                    ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+                    : const Icon(Icons.upload),
+                label: Text(_isLoading ? 'Guardando...' : 'Confirmar importación'),
               ),
             ),
           ],
