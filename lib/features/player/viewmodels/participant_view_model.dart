@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../services/participant_service.dart';
+
 import '../../../data/models/participant.dart';
+import '../services/participant_service.dart';
 
 class ParticipantViewModel extends ChangeNotifier {
   final ParticipantService _participantService;

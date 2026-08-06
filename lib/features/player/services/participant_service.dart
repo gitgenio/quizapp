@@ -1,22 +1,23 @@
-import 'dart:math';
-
-import 'package:flutter/foundation.dart';
-
 import '../../../data/models/enums/quiz_status.dart';
 import '../../../data/models/participant.dart';
 import '../../../data/repositories/participant_repository.dart';
 import '../../../data/repositories/quiz_repository.dart';
+import 'participant_token_service.dart';
 
 class ParticipantService {
   final QuizRepository _quizRepository;
   final ParticipantRepository _participantRepository;
+  final ParticipantTokenService _tokenService;
 
   ParticipantService({
     QuizRepository? quizRepository,
     ParticipantRepository? participantRepository,
+    ParticipantTokenService? tokenService,
   })  : _quizRepository = quizRepository ?? QuizRepository(),
         _participantRepository =
-            participantRepository ?? ParticipantRepository();
+            participantRepository ?? ParticipantRepository(),
+        _tokenService =
+            tokenService ?? ParticipantTokenService();
 
   Future<Participant> joinQuiz({
     required String displayName,
@@ -32,40 +33,56 @@ class ParticipantService {
     }
 
     if (mail.isEmpty) {
-      throw Exception('Debes ingresar tu correo electrónico.');
+      throw Exception(
+        'Debes ingresar tu correo electrónico.',
+      );
     }
 
     if (!_isValidEmail(mail)) {
-      throw Exception('El correo electrónico no es válido.');
+      throw Exception(
+        'El correo electrónico no es válido.',
+      );
     }
 
     if (code.isEmpty) {
-      throw Exception('Debes ingresar el código del Quiz.');
+      throw Exception(
+        'Debes ingresar el código del Quiz.',
+      );
     }
 
     final quiz =
     await _quizRepository.getQuizByAccessCode(code);
 
     if (quiz == null) {
-      throw Exception('El código del Quiz no existe.');
-    }
-
-    if (quiz.status == QuizStatus.draft) {
       throw Exception(
-        'El Quiz aún no está disponible.',
+        'El código del Quiz no existe.',
       );
     }
 
-    if (quiz.status == QuizStatus.finished) {
-      throw Exception(
-        'El Quiz ya finalizó.',
-      );
+    switch (quiz.status) {
+      case QuizStatus.draft:
+        throw Exception(
+          'El Quiz aún no está disponible.',
+        );
+
+      case QuizStatus.started:
+        throw Exception(
+          'El Quiz ya comenzó. No es posible ingresar.',
+        );
+
+      case QuizStatus.finished:
+        throw Exception(
+          'El Quiz ya finalizó.',
+        );
+
+      case QuizStatus.waiting:
+        break;
     }
 
     final participantToken =
-    await _getParticipantToken();
+    await _tokenService.getToken();
 
-    return _participantRepository.getOrCreate(
+    return await _participantRepository.getOrCreate(
       participantToken: participantToken,
       quizId: quiz.id,
       displayName: name,
@@ -79,24 +96,5 @@ class ParticipantService {
     );
 
     return regex.hasMatch(email);
-  }
-
-  Future<String> _getParticipantToken() async {
-    // En la siguiente etapa este método leerá/escribirá
-    // el token desde LocalStorage.
-
-    return _generateToken();
-  }
-
-  String _generateToken() {
-    const chars =
-        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-    final random = Random.secure();
-
-    return List.generate(
-      36,
-          (_) => chars[random.nextInt(chars.length)],
-    ).join();
   }
 }
