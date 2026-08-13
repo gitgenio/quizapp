@@ -14,6 +14,7 @@ import '../../features/home/screens/home_screen.dart';
 
 import '../../features/player/screens/finish_screen.dart';
 import '../../features/player/screens/join_quiz_screen.dart';
+import '../../features/player/screens/quiz_loading_screen.dart';
 import '../../features/player/screens/quiz_screen.dart';
 import '../../features/player/screens/waiting_screen.dart';
 
@@ -308,6 +309,16 @@ final GoRouter appRouter = GoRouter(
           state,
           ) {
         return const WaitingScreen();
+      },
+    ),
+
+    // ============================================
+    // CARGANDO QUIZ
+    // ============================================
+    GoRoute(
+      path: AppRoutes.quizLoading,
+      builder: (context, state) {
+        return const QuizLoadingScreen();
       },
     ),
 
