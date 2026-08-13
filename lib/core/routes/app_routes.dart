@@ -45,6 +45,8 @@ class AppRoutes {
 
   static const waiting = '/waiting';
 
+  static const quizLoading = '/quiz-loading';
+
   static const quiz = '/quiz';
 
   static const finish = '/finish';
