@@ -9,17 +9,22 @@ class ParticipantRepository {
     SupabaseClient? supabase,
   }) : _supabase = supabase ?? Supabase.instance.client;
 
-  /// Busca un participante por su token y quiz.
+  /// Busca un participante por su token y opcionalmente por el id del quiz.
   Future<Participant?> getByToken({
     required String participantToken,
-    required String quizId,
+    String? quizId,
   }) async {
-    final response = await _supabase
+    var query = _supabase
         .from('participants')
         .select()
-        .eq('participant_token', participantToken)
-        .eq('quiz_id', quizId)
-        .maybeSingle();
+        .eq('participant_token', participantToken);
+
+    // Si se proporciona el quizId, aplicamos el filtro adicional
+    if (quizId != null && quizId.isNotEmpty) {
+      query = query.eq('quiz_id', quizId);
+    }
+
+    final response = await query.maybeSingle();
 
     if (response == null) {
       return null;
@@ -89,5 +94,21 @@ class ParticipantRepository {
       'status': status,
     })
         .eq('id', participantId);
+  }
+
+  Future<Participant?> getById(String participantId) async {
+    final response = await _supabase
+        .from('participants')
+        .select()
+        .eq('id', participantId)
+        .maybeSingle();
+
+    if (response == null) {
+      return null;
+    }
+
+    return Participant.fromMap(
+      Map<String, dynamic>.from(response),
+    );
   }
 }

@@ -16,8 +16,7 @@ class ParticipantService {
   })  : _quizRepository = quizRepository ?? QuizRepository(),
         _participantRepository =
             participantRepository ?? ParticipantRepository(),
-        _tokenService =
-            tokenService ?? ParticipantTokenService();
+        _tokenService = tokenService ?? ParticipantTokenService();
 
   Future<Participant> joinQuiz({
     required String displayName,
@@ -29,7 +28,9 @@ class ParticipantService {
     final code = accessCode.trim().toUpperCase();
 
     if (name.isEmpty) {
-      throw Exception('Debes ingresar tu nombre.');
+      throw Exception(
+        'Debes ingresar tu nombre.',
+      );
     }
 
     if (mail.isEmpty) {
@@ -50,8 +51,7 @@ class ParticipantService {
       );
     }
 
-    final quiz =
-    await _quizRepository.getQuizByAccessCode(code);
+    final quiz = await _quizRepository.getQuizByAccessCode(code);
 
     if (quiz == null) {
       throw Exception(
@@ -79,14 +79,29 @@ class ParticipantService {
         break;
     }
 
-    final participantToken =
-    await _tokenService.getToken();
+    final participantToken = await _tokenService.getToken();
 
-    return await _participantRepository.getOrCreate(
+    return _participantRepository.getOrCreate(
       participantToken: participantToken,
       quizId: quiz.id,
       displayName: name,
       email: mail,
+    );
+  }
+
+  /// Recupera la sesión existente del participante.
+  ///
+  /// No crea un nuevo token.
+  /// Si no existe una sesión guardada, devuelve null.
+  Future<Participant?> restoreSession() async {
+    final token = await _tokenService.getExistingToken();
+
+    if (token == null) {
+      return null;
+    }
+
+    return _participantRepository.getByToken(
+      participantToken: token,
     );
   }
 

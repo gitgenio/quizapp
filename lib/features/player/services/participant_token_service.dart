@@ -13,16 +13,28 @@ class ParticipantTokenService {
       return existing;
     }
 
-    const uuid = Uuid();
-    final token = uuid.v4();
+    final token = const Uuid().v4();
 
     await prefs.setString(_key, token);
 
     return token;
   }
 
+  Future<String?> getExistingToken() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final token = prefs.getString(_key);
+
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+
+    return token;
+  }
+
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.remove(_key);
   }
 }
