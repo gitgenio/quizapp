@@ -58,7 +58,9 @@ class _JoinQuizScreenState extends State<JoinQuizScreen> {
       return;
     }
 
-    context.go(AppRoutes.waiting);
+    context.go(
+      '${AppRoutes.waiting}?quizId=${_viewModel.participant!.quizId}',
+    );
   }
 
   @override

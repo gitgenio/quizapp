@@ -1,44 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // <-- AGREGADO: Necesario para usar context.go o context.push
-import '../../../core/routes/app_routes.dart'; // <-- AGREGADO: Para usar tus rutas
-import '../../../shared/widgets/app_scaffold.dart';
+import 'package:go_router/go_router.dart';
 
-class WaitingScreen extends StatelessWidget {
-  const WaitingScreen({super.key});
+import '../../../core/routes/app_routes.dart';
+import '../../../shared/widgets/app_scaffold.dart';
+import '../viewmodels/waiting_room_view_model.dart';
+
+class WaitingScreen extends StatefulWidget {
+  final String quizId;
+
+  const WaitingScreen({
+    super.key,
+    required this.quizId,
+  });
+
+  @override
+  State<WaitingScreen> createState() => _WaitingScreenState();
+}
+
+class _WaitingScreenState extends State<WaitingScreen> {
+  late final WaitingRoomViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _viewModel = WaitingRoomViewModel();
+
+    _viewModel.addListener(_onViewModelChanged);
+
+    _viewModel.startListening(
+      quizId: widget.quizId,
+    );
+  }
+
+  void _onViewModelChanged() {
+    if (!mounted) return;
+
+    if (_viewModel.quizStarted) {
+      context.go(AppRoutes.quizLoading);
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false, // Bloquea que el botón "atrás" del celular rompa la app o la cierre de golpe
-      // onPopInvokedWithResult: (didPop, result) {
-      //   if (didPop) return;
-      //
-      //   // Al presionar atrás en la sala de espera, lo devolvemos de forma segura
-      //   // a la pantalla de unirse al juego (o a la que prefieras) usando context.go
-      //   if (context.canPop()) {
-      //     context.pop(); // Esto hace un "atrás" natural respetando la pila original
-      //   } else {
-      //     // Por seguridad, si por alguna razón la pila quedó vacía, lo mandamos al Home
-      //     context.go(AppRoutes.home);
-      //   }
-      // },
-      child: const AppScaffold(
+    return const PopScope(
+      canPop: false,
+      child: AppScaffold(
         title: "Sala de Espera",
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(),
+
               SizedBox(height: 30),
+
               Icon(
                 Icons.hourglass_top,
                 size: 70,
               ),
+
               SizedBox(height: 20),
+
               Text(
                 "Esperando que el administrador\ninicie el Quiz...",
                 textAlign: TextAlign.center,
-              )
+              ),
             ],
           ),
         ),
