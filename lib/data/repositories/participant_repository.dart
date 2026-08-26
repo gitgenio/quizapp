@@ -42,22 +42,35 @@ class ParticipantRepository {
     required String displayName,
     required String email,
   }) async {
-    final response = await _supabase
-        .from('participants')
-        .insert({
-      'participant_token': participantToken,
-      'quiz_id': quizId,
-      'display_name': displayName,
-      'email': email,
-      'status': 'waiting',
-    })
-        .select()
-        .single();
+    final response = await _supabase.rpc(
+      'join_quiz',
+      params: {
+        'p_participant_token': participantToken,
+        'p_quiz_id': quizId,
+        'p_display_name': displayName,
+        'p_email': email,
+      },
+    );
+
+    if (response == null) {
+      throw Exception(
+        'No fue posible registrar la participación.',
+      );
+    }
+
+    final rows = response as List;
+
+    if (rows.isEmpty) {
+      throw Exception(
+        'No fue posible registrar la participación.',
+      );
+    }
 
     return Participant.fromMap(
-      Map<String, dynamic>.from(response),
+      Map<String, dynamic>.from(rows.first),
     );
   }
+
 
   /// Devuelve el participante existente o lo crea si aún no existe.
   Future<Participant> getOrCreate({
@@ -66,15 +79,6 @@ class ParticipantRepository {
     required String displayName,
     required String email,
   }) async {
-    final existing = await getByToken(
-      participantToken: participantToken,
-      quizId: quizId,
-    );
-
-    if (existing != null) {
-      return existing;
-    }
-
     return create(
       participantToken: participantToken,
       quizId: quizId,

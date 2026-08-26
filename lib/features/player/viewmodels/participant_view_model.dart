@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../data/models/participant.dart';
+import '../../../data/models/quiz.dart';
 import '../services/participant_service.dart';
 
 class ParticipantViewModel extends ChangeNotifier {
@@ -14,6 +15,10 @@ class ParticipantViewModel extends ChangeNotifier {
   Participant? _participant;
 
   Participant? get participant => _participant;
+
+  Quiz? _quiz;
+
+  Quiz? get quiz => _quiz;
 
   bool _isLoading = false;
 
@@ -48,6 +53,11 @@ class ParticipantViewModel extends ChangeNotifier {
 
       _participant = participant;
 
+      _quiz =
+      await _participantService.getQuizForParticipant(
+        participant,
+      );
+
       return true;
     } catch (e) {
       _errorMessage = _cleanErrorMessage(e);
@@ -60,13 +70,11 @@ class ParticipantViewModel extends ChangeNotifier {
     }
   }
 
-  /// Intenta recuperar una sesión existente.
-  ///
-  /// Devuelve el participante recuperado o null
-  /// si no existe una sesión.
-  Future<Participant?> restoreSession() async {
+  /// Recupera la sesión existente después
+  /// de recargar el navegador.
+  Future<bool> restoreSession() async {
     if (_isLoading) {
-      return _participant;
+      return _participant != null;
     }
 
     _isLoading = true;
@@ -78,14 +86,30 @@ class ParticipantViewModel extends ChangeNotifier {
       final participant =
       await _participantService.restoreSession();
 
-      _participant = participant;
+      if (participant == null) {
+        _participant = null;
+        _quiz = null;
 
-      return participant;
+        return false;
+      }
+
+      final quiz =
+      await _participantService.getQuizForParticipant(
+        participant,
+      );
+
+      _participant = participant;
+      _quiz = quiz;
+
+      return true;
     } catch (e) {
+      _participant = null;
+      _quiz = null;
+
       _errorMessage =
       'No fue posible recuperar la sesión.';
 
-      return null;
+      return false;
     } finally {
       _isLoading = false;
 
@@ -100,6 +124,8 @@ class ParticipantViewModel extends ChangeNotifier {
 
   void clearParticipant() {
     _participant = null;
+    _quiz = null;
+
     notifyListeners();
   }
 

@@ -25,9 +25,9 @@ class _WaitingScreenState extends State<WaitingScreen> {
     super.initState();
 
     _viewModel = WaitingRoomViewModel();
-
     _viewModel.addListener(_onViewModelChanged);
 
+    // Iniciar la escucha
     _viewModel.startListening(
       quizId: widget.quizId,
     );
@@ -35,6 +35,15 @@ class _WaitingScreenState extends State<WaitingScreen> {
 
   void _onViewModelChanged() {
     if (!mounted) return;
+
+    if (_viewModel.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_viewModel.errorMessage!),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
 
     if (_viewModel.quizStarted) {
       context.go(AppRoutes.quizLoading);
@@ -50,28 +59,28 @@ class _WaitingScreenState extends State<WaitingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const PopScope(
+    return PopScope(
       canPop: false,
       child: AppScaffold(
         title: "Sala de Espera",
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
+            children: const [
               CircularProgressIndicator(),
-
               SizedBox(height: 30),
-
               Icon(
                 Icons.hourglass_top,
                 size: 70,
               ),
-
               SizedBox(height: 20),
-
               Text(
                 "Esperando que el administrador\ninicie el Quiz...",
                 textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),

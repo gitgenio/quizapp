@@ -13,12 +13,16 @@ class RealtimeService {
     required String quizId,
     required void Function(String status) onStatusChanged,
   }) {
-    _quizChannel?.unsubscribe();
+    // Si ya existe un canal, lo eliminamos antes de crear uno nuevo
+    if (_quizChannel != null) {
+      _supabase.removeChannel(_quizChannel!);
+      _quizChannel = null;
+    }
 
     _quizChannel = _supabase
         .channel('quiz-status-$quizId')
         .onPostgresChanges(
-      event: PostgresChangeEvent.update,
+      event: PostgresChangeEvent.all, // Escucha cualquier cambio en la fila
       schema: 'public',
       table: 'quizzes',
       filter: PostgresChangeFilter(
@@ -27,10 +31,12 @@ class RealtimeService {
         value: quizId,
       ),
       callback: (payload) {
-        final status = payload.newRecord['status'];
-
-        if (status is String) {
-          onStatusChanged(status);
+        final newRecord = payload.newRecord;
+        if (newRecord.isNotEmpty && newRecord.containsKey('status')) {
+          final status = newRecord['status'];
+          if (status is String) {
+            onStatusChanged(status);
+          }
         }
       },
     )
@@ -47,7 +53,6 @@ class RealtimeService {
     }
 
     await _supabase.removeChannel(channel);
-
     _quizChannel = null;
   }
 

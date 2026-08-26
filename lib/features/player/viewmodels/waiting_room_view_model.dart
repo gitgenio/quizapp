@@ -1,31 +1,32 @@
 import 'package:flutter/foundation.dart';
 
 import '../services/realtime_service.dart';
+import '../../../data/repositories/quiz_repository.dart';
+import '../../../data/models/enums/quiz_status.dart';
 
 class WaitingRoomViewModel extends ChangeNotifier {
   final RealtimeService _realtimeService;
+  final QuizRepository _quizRepository;
 
   WaitingRoomViewModel({
     RealtimeService? realtimeService,
-  }) : _realtimeService =
-      realtimeService ?? RealtimeService();
+    QuizRepository? quizRepository,
+  })  : _realtimeService = realtimeService ?? RealtimeService(),
+        _quizRepository = quizRepository ?? QuizRepository();
 
   bool _isListening = false;
-
   bool get isListening => _isListening;
 
   bool _quizStarted = false;
-
   bool get quizStarted => _quizStarted;
 
   String? _errorMessage;
-
   String? get errorMessage => _errorMessage;
 
   /// Comienza a escuchar los cambios de estado del Quiz.
-  void startListening({
+  Future<void> startListening({
     required String quizId,
-  }) {
+  }) async {
     if (_isListening) {
       return;
     }
@@ -36,15 +37,31 @@ class WaitingRoomViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // 1. Verificación inicial de seguridad: ¿El quiz ya inició o existe?
+      final currentQuiz = await _quizRepository.getQuizById(quizId);
+
+      // CORRECCIÓN: Manejar el caso null
+      if (currentQuiz == null) {
+        _isListening = false;
+        _errorMessage = 'El Quiz no existe o ya no está disponible.';
+        notifyListeners();
+        return;
+      }
+
+      if (currentQuiz.status == QuizStatus.started) {
+        _quizStarted = true;
+        notifyListeners();
+        return;
+      }
+
+      // 2. Escuchar cambios en tiempo real
       _realtimeService.listenToQuiz(
         quizId: quizId,
         onStatusChanged: _handleQuizStatusChanged,
       );
     } catch (e) {
       _isListening = false;
-      _errorMessage =
-      'No fue posible conectarse a la sala de espera.';
-
+      _errorMessage = 'No fue posible conectarse a la sala de espera.';
       notifyListeners();
     }
   }
@@ -69,9 +86,7 @@ class WaitingRoomViewModel extends ChangeNotifier {
     }
 
     await _realtimeService.unsubscribeFromQuiz();
-
     _isListening = false;
-
     notifyListeners();
   }
 

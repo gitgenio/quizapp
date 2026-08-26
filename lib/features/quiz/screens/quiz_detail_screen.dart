@@ -14,92 +14,57 @@ class QuizDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<QuizDetailScreen> createState() =>
-      _QuizDetailScreenState();
+  State<QuizDetailScreen> createState() => _QuizDetailScreenState();
 }
 
-class _QuizDetailScreenState
-    extends State<QuizDetailScreen> {
-  final QuizRepository _quizRepository =
-  QuizRepository();
+class _QuizDetailScreenState extends State<QuizDetailScreen> {
+  final QuizRepository _quizRepository = QuizRepository();
 
-  late Future<Quiz> _quizFuture;
+  // CORRECCIÓN: Cambiado a Future<Quiz?>
+  late Future<Quiz?> _quizFuture;
 
   @override
   void initState() {
     super.initState();
-
     _loadQuiz();
   }
 
   void _loadQuiz() {
-    _quizFuture =
-        _quizRepository.getQuizById(
-          widget.quizId,
-        );
+    _quizFuture = _quizRepository.getQuizById(widget.quizId);
   }
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Detalle del Quiz',
-        ),
+        title: const Text('Detalle del Quiz'),
       ),
-
-      body: FutureBuilder<Quiz>(
+      // CORRECCIÓN: FutureBuilder ahora espera Quiz?
+      body: FutureBuilder<Quiz?>(
         future: _quizFuture,
-
-        builder: (
-            context,
-            snapshot,
-            ) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child:
-              CircularProgressIndicator(),
-            );
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
             return Center(
               child: Padding(
-                padding:
-                const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Column(
-                  mainAxisSize:
-                  MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                    ),
-
-                    const SizedBox(
-                      height: 16,
-                    ),
-
-                    const Text(
-                      'No se pudo cargar el Quiz.',
-                    ),
-
-                    const SizedBox(
-                      height: 16,
-                    ),
-
+                    const Icon(Icons.error_outline, size: 48),
+                    const SizedBox(height: 16),
+                    const Text('No se pudo cargar el Quiz.'),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
                         setState(() {
                           _loadQuiz();
                         });
                       },
-                      child: const Text(
-                        'Reintentar',
-                      ),
+                      child: const Text('Reintentar'),
                     ),
                   ],
                 ),
@@ -107,112 +72,63 @@ class _QuizDetailScreenState
             );
           }
 
-          final quiz =
-              snapshot.data;
+          final quiz = snapshot.data;
 
+          // Esta validación ya existía y ahora funciona perfectamente con el tipo nullable
           if (quiz == null) {
-            return const Center(
-              child: Text(
-                'Quiz no encontrado.',
-              ),
-            );
+            return const Center(child: Text('Quiz no encontrado.'));
           }
 
           return SingleChildScrollView(
-            padding:
-            const EdgeInsets.all(24),
-
+            padding: const EdgeInsets.all(24),
             child: Center(
               child: ConstrainedBox(
-                constraints:
-                const BoxConstraints(
-                  maxWidth: 700,
-                ),
-
+                constraints: const BoxConstraints(maxWidth: 700),
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment
-                      .stretch,
-
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
                       quiz.title,
-                      style: Theme.of(
-                        context,
-                      )
-                          .textTheme
-                          .headlineMedium,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
-
-                    const SizedBox(
-                      height: 24,
-                    ),
-
+                    const SizedBox(height: 24),
                     Card(
                       child: Padding(
-                        padding:
-                        const EdgeInsets.all(
-                          20,
-                        ),
-
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
                             _InfoRow(
-                              label:
-                              'Código de acceso',
-                              value:
-                              quiz.accessCode,
+                              label: 'Código de acceso',
+                              value: quiz.accessCode,
                             ),
-
                             const Divider(),
-
                             _InfoRow(
-                              label:
-                              'Preguntas por participante',
-                              value:
-                              '${quiz.questionCount}',
+                              label: 'Preguntas por participante',
+                              value: '${quiz.questionCount}',
                             ),
-
                             const Divider(),
-
                             _InfoRow(
-                              label:
-                              'Tiempo por pregunta',
-                              value:
-                              '${quiz.timePerQuestionSeconds} segundos',
+                              label: 'Tiempo por pregunta',
+                              value: '${quiz.timePerQuestionSeconds} segundos',
                             ),
-
                             const Divider(),
-
                             _InfoRow(
-                              label:
-                              'Estado',
-                              value:
-                              quiz.status.name,
+                              label: 'Estado',
+                              value: quiz.status.name,
                             ),
                           ],
                         ),
                       ),
                     ),
-
-                    const SizedBox(
-                      height: 24,
-                    ),
-
+                    const SizedBox(height: 24),
                     FilledButton.icon(
                       onPressed: () {
                         context.push(
-                          '${AppRoutes.questionImport}'
-                              '?quizId=${quiz.id}'
-                              '&questionCount=${quiz.questionCount}',
+                          '${AppRoutes.questionImport}?quizId=${quiz.id}&questionCount=${quiz.questionCount}',
                         );
                       },
-                      icon: const Icon(
-                        Icons.upload_file,
-                      ),
-                      label: const Text(
-                        'Importar preguntas desde Excel',
-                      ),
+                      icon: const Icon(Icons.upload_file),
+                      label: const Text('Importar preguntas desde Excel'),
                     ),
                   ],
                 ),
@@ -225,8 +141,7 @@ class _QuizDetailScreenState
   }
 }
 
-class _InfoRow
-    extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
 
@@ -236,37 +151,20 @@ class _InfoRow
   });
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Padding(
-      padding:
-      const EdgeInsets.symmetric(
-        vertical: 8,
-      ),
-
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment:
-        CrossAxisAlignment.start,
-
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                fontWeight:
-                FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-
-          const SizedBox(
-            width: 16,
-          ),
-
-          Text(
-            value,
-          ),
+          const SizedBox(width: 16),
+          Text(value),
         ],
       ),
     );

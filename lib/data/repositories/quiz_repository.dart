@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/enums/quiz_status.dart';
 import '../models/quiz.dart';
 
 class QuizRepository {
@@ -31,18 +30,18 @@ class QuizRepository {
         .toList();
   }
 
-  Future<Quiz> getQuizById(
-      String quizId,
-      ) async {
-    final response = await _supabase
-        .from('quizzes')
-        .select()
-        .eq('id', quizId)
-        .single();
-
-    return Quiz.fromMap(
-      Map<String, dynamic>.from(response),
+  Future<Quiz?> getQuizById(String quizId) async { // Cambia a Quiz? para ser más seguro
+    final response = await _supabase.rpc(
+      'get_quiz_by_id',
+      params: {'p_quiz_id': quizId},
     );
+
+    if (response == null) return null;
+
+    final rows = response as List;
+    if (rows.isEmpty) return null;
+
+    return Quiz.fromMap(Map<String, dynamic>.from(rows.first));
   }
 
   Future<Quiz> createQuiz({
@@ -81,29 +80,49 @@ class QuizRepository {
     );
   }
 
-  // Future<void> deleteQuiz(String id) async {
-  //   await supabase
-  //       .from('quizzes')
-  //       .delete()
-  //       .eq('id', id);
-  // }
+  Future<void> deleteQuiz(String id) async {
+    await _supabase
+        .from('quizzes')
+        .delete()
+        .eq('id', id);
+  }
 
   Future<Quiz?> getQuizByAccessCode(
       String accessCode,
       ) async {
-    final response = await _supabase
-        .from('quizzes')
-        .select()
-        .eq('access_code', accessCode.toUpperCase())
-        .maybeSingle();
+    final code = accessCode.trim().toUpperCase();
+
+    if (code.isEmpty) {
+      return null;
+    }
+
+    final response = await _supabase.rpc(
+      'get_quiz_by_access_code',
+      params: {
+        'p_access_code': code,
+      },
+    );
+
+    print('========== RPC QUIZ ==========');
+    print(response);
+    print('==============================');
 
     if (response == null) {
       return null;
     }
 
-    return Quiz.fromMap(
-      Map<String, dynamic>.from(response),
-    );
+    final rows = response as List;
+
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    final quizMap =
+    Map<String, dynamic>.from(rows.first);
+
+    print('STATUS RECIBIDO POR FLUTTER: ${quizMap['status']}');
+
+    return Quiz.fromMap(quizMap);
   }
 
   String _generateAccessCode() {
