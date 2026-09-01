@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/enums/quiz_status.dart';
 import '../models/quiz.dart';
 
 class QuizRepository {
@@ -139,4 +140,14 @@ class QuizRepository {
       )],
     ).join();
   }
+
+  Future<void> startQuiz(String quizId) async {
+    await _supabase
+        .from('quizzes')
+        .update({
+      'status': QuizStatus.started.name,
+    })
+        .eq('id', quizId);
+  }
+
 }

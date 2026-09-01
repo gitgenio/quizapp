@@ -20,15 +20,15 @@ class AppRoutes {
 
   static const quizDetail = '/admin/quiz-detail';
 
+  static const startQuiz = '/start-quiz';
+
   static const questionList = '/admin/questions';
 
   static const questionForm = '/admin/question-form';
 
-  static const questionImport =
-      '/admin/question-import';
+  static const questionImport =  '/admin/question-import';
 
-  static const accessCode =
-      '/admin/access-code';
+  static const accessCode =    '/admin/access-code';
 
   // ============================================
   // RUTA EXCLUSIVA PARA SUPERADMIN

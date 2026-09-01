@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/models/quiz.dart';
+import '../../data/repositories/quiz_repository.dart';
 import '../../features/admin/screens/access_code_screen.dart';
 import '../../features/admin/screens/create_administrator_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
 import '../../features/admin/screens/question_form_screen.dart';
 import '../../features/admin/screens/question_list_screen.dart';
 
+import '../../features/admin/screens/start_quiz_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 
 import '../../features/home/screens/home_screen.dart';
@@ -58,6 +61,7 @@ final GoRouter appRouter = GoRouter(
             location == AppRoutes.quizList ||
             location == AppRoutes.quizForm ||
             location == AppRoutes.quizDetail ||
+            location == AppRoutes.startQuiz ||
             location == AppRoutes.questionList ||
             location == AppRoutes.questionForm ||
             location == AppRoutes.questionImport ||
@@ -182,6 +186,56 @@ final GoRouter appRouter = GoRouter(
 
         return QuizDetailScreen(
           quizId: quizId,
+        );
+      },
+    ),
+
+    GoRoute(
+      path: AppRoutes.startQuiz,
+      builder: (
+          context,
+          state,
+          ) {
+        final quizId =
+        state.uri.queryParameters['quizId'];
+
+        if (quizId == null || quizId.isEmpty) {
+          return const Scaffold(
+            body: Center(
+              child: Text(
+                'No se especificó el Quiz.',
+              ),
+            ),
+          );
+        }
+
+        return FutureBuilder<Quiz?>(
+          future: QuizRepository().getQuizById(quizId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState ==
+                ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            if (snapshot.hasError ||
+                snapshot.data == null) {
+              return const Scaffold(
+                body: Center(
+                  child: Text(
+                    'No se pudo cargar el Quiz.',
+                  ),
+                ),
+              );
+            }
+
+            return StartQuizScreen(
+              quiz: snapshot.data!,
+            );
+          },
         );
       },
     ),
