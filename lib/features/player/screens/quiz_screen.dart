@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
 import '../../../shared/widgets/app_scaffold.dart';
-import '../models/prepared_question.dart';
+import '../models/quiz_session_data.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -13,25 +14,61 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  List<PreparedQuestion>? _questions;
+  QuizSessionData? _sessionData;
   int _currentIndex = 0;
   int? _selectedIndex;
+
+  late int _timeLeft;
+  Timer? _timer;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Solo inicializamos una vez
-    if (_questions == null) {
+    if (_sessionData == null) {
       final args = GoRouterState.of(context).extra;
-      if (args is List<PreparedQuestion> && args.isNotEmpty) {
-        _questions = args;
+      if (args is QuizSessionData && args.questions.isNotEmpty) {
+        _sessionData = args;
+        _startTimer(); // Iniciar el temporizador al cargar la primera pregunta
       } else {
-        // Si no hay datos, regresamos al inicio de forma segura
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) context.go(AppRoutes.home);
         });
       }
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timeLeft = _sessionData!.timePerQuestionSeconds;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_timeLeft > 0) {
+        setState(() {
+          _timeLeft--;
+        });
+      } else {
+        timer.cancel();
+        _handleTimeUp();
+      }
+    });
+  }
+
+  void _handleTimeUp() {
+    // El tiempo se acabó. Avanzamos sin guardar respuesta (selectedIndex queda en null)
+    if (_currentIndex < _sessionData!.questions.length - 1) {
+      setState(() {
+        _currentIndex++;
+        _selectedIndex = null;
+      });
+      _startTimer(); // Reiniciar timer para la nueva pregunta
+    } else {
+      context.go(AppRoutes.finish);
     }
   }
 
@@ -42,29 +79,38 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _nextQuestion() {
-    if (_selectedIndex == null) return;
+    if (_selectedIndex == null) return; // Obligar a seleccionar una respuesta manualmente
 
-    if (_currentIndex < _questions!.length - 1) {
+    if (_currentIndex < _sessionData!.questions.length - 1) {
       setState(() {
         _currentIndex++;
         _selectedIndex = null;
       });
+      _startTimer(); // Reiniciar timer para la nueva pregunta
     } else {
+      _timer?.cancel();
       context.go(AppRoutes.finish);
     }
   }
 
   @override
+  void dispose() {
+    _timer?.cancel(); // ¡Muy importante para evitar memory leaks!
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (_questions == null || _questions!.isEmpty) {
+    if (_sessionData == null) {
       return const AppScaffold(
         title: 'Quiz',
         child: Center(child: CircularProgressIndicator()),
       );
     }
 
-    final currentQuestion = _questions![_currentIndex];
-    final totalQuestions = _questions!.length;
+    final currentQuestion = _sessionData!.questions[_currentIndex];
+    final totalQuestions = _sessionData!.questions.length;
+    final isTimeRunningOut = _timeLeft <= 5;
 
     return AppScaffold(
       title: 'Pregunta ${_currentIndex + 1} de $totalQuestions',
@@ -73,6 +119,41 @@ class _QuizScreenState extends State<QuizScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Temporizador visible
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isTimeRunningOut ? Colors.red.shade50 : Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: isTimeRunningOut ? Colors.red : Colors.blue,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.timer_outlined,
+                      color: isTimeRunningOut ? Colors.red : Colors.blue,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$_timeLeft s',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isTimeRunningOut ? Colors.red : Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Enunciado
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -84,6 +165,8 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
             ),
             const SizedBox(height: 24),
+
+            // Opciones mezcladas
             Expanded(
               child: ListView.separated(
                 itemCount: currentQuestion.shuffledOptions.length,
@@ -120,7 +203,7 @@ class _QuizScreenState extends State<QuizScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                String.fromCharCode(65 + index),
+                                String.fromCharCode(65 + index), // A, B, C, D
                                 style: TextStyle(
                                   color: isSelected ? Colors.white : Colors.black,
                                   fontWeight: FontWeight.bold,
@@ -142,7 +225,10 @@ class _QuizScreenState extends State<QuizScreen> {
                 },
               ),
             ),
+
             const SizedBox(height: 24),
+
+            // Botón Siguiente / Finalizar
             FilledButton(
               onPressed: _selectedIndex == null ? null : _nextQuestion,
               child: Text(

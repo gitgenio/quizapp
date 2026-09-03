@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
 import '../../../data/repositories/question_repository.dart';
+import '../../../data/repositories/quiz_repository.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 import '../models/prepared_question.dart';
+import '../models/quiz_session_data.dart';
 
 class QuizLoadingScreen extends StatefulWidget {
   final String quizId;
@@ -17,6 +19,7 @@ class QuizLoadingScreen extends StatefulWidget {
 
 class _QuizLoadingScreenState extends State<QuizLoadingScreen> {
   final QuestionRepository _questionRepository = QuestionRepository();
+  final QuizRepository _quizRepository = QuizRepository();
 
   @override
   void initState() {
@@ -24,77 +27,49 @@ class _QuizLoadingScreenState extends State<QuizLoadingScreen> {
     _loadAndPrepareQuestions();
   }
 
-  // Future<void> _loadAndPrepareQuestions() async {
-  //   try {
-  //     // 1. Obtener preguntas seleccionadas desde Supabase
-  //     final questions = await _questionRepository.getSelectedQuestionsForQuiz(widget.quizId);
-  //
-  //     if (!mounted) return;
-  //
-  //     // 2. Mezclar preguntas y opciones para ESTE participante
-  //     final preparedQuestions = prepareQuestionsForParticipant(questions);
-  //
-  //     if (!mounted) return;
-  //
-  //     // 3. Navegar al QuizScreen pasando los datos ya procesados
-  //     // Usamos pushReplacement para que no pueda volver a la pantalla de carga
-  //     context.pushReplacement(
-  //       AppRoutes.quiz,
-  //       extra: preparedQuestions,
-  //     );
-  //   } catch (e) {
-  //     if (!mounted) return;
-  //
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text('Error al cargar las preguntas: $e'),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //     context.go(AppRoutes.home); // Fallback seguro
-  //   }
-  // }
-
   Future<void> _loadAndPrepareQuestions() async {
     try {
       print('========== QUIZ LOADING STARTED ==========');
-      print('Quiz ID: ${widget.quizId}');
 
+      // 1. Obtener el tiempo configurado para este Quiz
+      final quiz = await _quizRepository.getQuizById(widget.quizId);
+      if (quiz == null) throw Exception('Quiz no encontrado');
+
+      // 2. Obtener preguntas seleccionadas desde Supabase
       final questions = await _questionRepository.getSelectedQuestionsForQuiz(widget.quizId);
-
       print('Preguntas cargadas: ${questions.length}');
-      print('==========================================');
 
       if (!mounted) return;
 
+      // 3. Mezclar preguntas y opciones para ESTE participante
       final preparedQuestions = prepareQuestionsForParticipant(questions);
-
       print('Preguntas preparadas: ${preparedQuestions.length}');
 
       if (!mounted) return;
 
+      // 4. Navegar al QuizScreen pasando los datos ya procesados
       context.pushReplacement(
         AppRoutes.quiz,
-        extra: preparedQuestions,
+        extra: QuizSessionData(
+          timePerQuestionSeconds: quiz.timePerQuestionSeconds,
+          questions: preparedQuestions,
+        ),
       );
     } catch (e, stackTrace) {
       print('========== ERROR EN QUIZ LOADING ==========');
       print('Error: $e');
       print('Stack: $stackTrace');
-      print('==========================================');
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Error al cargar: $e'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),
       );
-
-      // NO redirijas al home todavía, déjalo en la pantalla de carga para ver el error
-      // context.go(AppRoutes.home);
+      context.go(AppRoutes.home);
     }
   }
 
