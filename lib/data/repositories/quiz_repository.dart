@@ -150,4 +150,22 @@ class QuizRepository {
         .eq('id', quizId);
   }
 
+  /// Inicia el Quiz de forma atómica:
+  /// 1. Verifica que esté en 'waiting'
+  /// 2. Selecciona y guarda las preguntas en quiz_selected_questions
+  /// 3. Cambia el estado a 'started'
+  Future<List<Map<String, dynamic>>> startQuizWithQuestions(String quizId) async {
+    final response = await _supabase.rpc(
+      'start_quiz_with_questions',
+      params: {'p_quiz_id': quizId},
+    );
+
+    if (response == null) {
+      throw Exception('No se pudo iniciar el Quiz.');
+    }
+
+    // La RPC retorna una lista de mapas con question_id y question_order
+    return List<Map<String, dynamic>>.from(response);
+  }
+
 }

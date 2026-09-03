@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
+import '../../../data/models/enums/quiz_status.dart';
 import '../../../data/models/quiz.dart';
 import '../../../data/repositories/quiz_repository.dart';
 
@@ -130,6 +131,18 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                       icon: const Icon(Icons.upload_file),
                       label: const Text('Importar preguntas desde Excel'),
                     ),
+                    const SizedBox(height: 12),
+
+                    if (quiz.status == QuizStatus.waiting)
+                      FilledButton.icon(
+                        onPressed: () {
+                          context.push(
+                            '${AppRoutes.startQuiz}?quizId=${quiz.id}',
+                          );
+                        },
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Preparar e iniciar Quiz'),
+                      ),
                   ],
                 ),
               ),
