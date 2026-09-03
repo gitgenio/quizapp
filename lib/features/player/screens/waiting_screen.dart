@@ -46,7 +46,8 @@ class _WaitingScreenState extends State<WaitingScreen> {
     }
 
     if (_viewModel.quizStarted) {
-      context.go(AppRoutes.quizLoading);
+      // CAMBIO: Pasamos el quizId como parámetro de consulta
+      context.go('${AppRoutes.quizLoading}?quizId=${widget.quizId}');
     }
   }
 
