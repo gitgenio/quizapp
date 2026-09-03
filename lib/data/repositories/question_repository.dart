@@ -34,33 +34,53 @@ class QuestionRepository {
     await _supabase.from('questions').insert(data);
   }
 
-  /// Obtiene las preguntas seleccionadas para un quiz, ordenadas por question_order.
   Future<List<Question>> getSelectedQuestionsForQuiz(String quizId) async {
-    final response = await _supabase
-        .from('quiz_selected_questions')
-        .select('''
-          question_order,
-          questions:question_id (
-            id,
-            quiz_id,
-            order,
-            statement,
-            option_a,
-            option_b,
-            option_c,
-            option_d,
-            correct_answer,
-            type
-          )
-        ''')
-        .eq('quiz_id', quizId)
-        .order('question_order', ascending: true);
+    print('========== QUERY SELECTED QUESTIONS ==========');
+    print('Quiz ID: $quizId');
 
-    final List<dynamic> data = response as List<dynamic>;
+    try {
+      final response = await _supabase
+          .from('quiz_selected_questions')
+          .select('''
+            question_order,
+            questions:question_id (
+              id,
+              quiz_id,
+              order,
+              statement,
+              option_a,
+              option_b,
+              option_c,
+              option_d,
+              correct_answer,
+              type
+            )
+          ''')
+          .eq('quiz_id', quizId)
+          .order('question_order', ascending: true);
 
-    return data.map((item) {
-      final qMap = Map<String, dynamic>.from(item['questions']);
-      return Question.fromMap(qMap);
-    }).toList();
+      print('Response from Supabase: $response');
+      print('Response type: ${response.runtimeType}');
+
+      final List<dynamic> data = response as List<dynamic>;
+      print('Number of records: ${data.length}');
+
+      final questions = data.map((item) {
+        print('Processing item: $item');
+        final qMap = Map<String, dynamic>.from(item['questions']);
+        return Question.fromMap(qMap);
+      }).toList();
+
+      print('Questions loaded: ${questions.length}');
+      print('==========================================');
+
+      return questions;
+    } catch (e, stackTrace) {
+      print('========== ERROR IN QUERY ==========');
+      print('Error: $e');
+      print('Stack: $stackTrace');
+      print('====================================');
+      rethrow;
+    }
   }
 }
