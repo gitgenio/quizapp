@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/app_scaffold.dart';
 
 class QuizLoadingScreen extends StatelessWidget {
-  const QuizLoadingScreen({super.key});
+  final String quizId;
+
+  const QuizLoadingScreen({
+    super.key,
+    required this.quizId,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -383,7 +383,19 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.quizLoading,
       builder: (context, state) {
-        return const QuizLoadingScreen();
+        final quizId = state.uri.queryParameters['quizId'];
+
+        if (quizId == null || quizId.isEmpty) {
+          return const Scaffold(
+            body: Center(
+              child: Text(
+                'No se pudo identificar el Quiz.',
+              ),
+            ),
+          );
+        }
+
+        return QuizLoadingScreen(quizId: quizId);
       },
     ),
 
