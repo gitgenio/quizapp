@@ -10,8 +10,13 @@ import '../models/quiz_session_data.dart';
 
 class QuizLoadingScreen extends StatefulWidget {
   final String quizId;
+  final String participantId; // <-- AGREGADO
 
-  const QuizLoadingScreen({super.key, required this.quizId});
+  const QuizLoadingScreen({
+    super.key,
+    required this.quizId,
+    required this.participantId, // <-- AGREGADO
+  });
 
   @override
   State<QuizLoadingScreen> createState() => _QuizLoadingScreenState();
@@ -30,6 +35,7 @@ class _QuizLoadingScreenState extends State<QuizLoadingScreen> {
   Future<void> _loadAndPrepareQuestions() async {
     try {
       print('========== QUIZ LOADING STARTED ==========');
+      print('Participant ID recibido: ${widget.participantId}');
 
       // 1. Obtener el tiempo configurado para este Quiz
       final quiz = await _quizRepository.getQuizById(widget.quizId);
@@ -51,6 +57,7 @@ class _QuizLoadingScreenState extends State<QuizLoadingScreen> {
       context.pushReplacement(
         AppRoutes.quiz,
         extra: QuizSessionData(
+          participantId: widget.participantId, // <-- USAMOS EL QUE RECIBIMOS
           timePerQuestionSeconds: quiz.timePerQuestionSeconds,
           questions: preparedQuestions,
         ),

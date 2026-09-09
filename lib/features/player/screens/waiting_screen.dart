@@ -7,10 +7,12 @@ import '../viewmodels/waiting_room_view_model.dart';
 
 class WaitingScreen extends StatefulWidget {
   final String quizId;
+  final String participantId; // <-- AGREGADO
 
   const WaitingScreen({
     super.key,
     required this.quizId,
+    required this.participantId, // <-- AGREGADO
   });
 
   @override
@@ -27,7 +29,6 @@ class _WaitingScreenState extends State<WaitingScreen> {
     _viewModel = WaitingRoomViewModel();
     _viewModel.addListener(_onViewModelChanged);
 
-    // Iniciar la escucha
     _viewModel.startListening(
       quizId: widget.quizId,
     );
@@ -46,8 +47,8 @@ class _WaitingScreenState extends State<WaitingScreen> {
     }
 
     if (_viewModel.quizStarted) {
-      // CAMBIO: Pasamos el quizId como parámetro de consulta
-      context.go('${AppRoutes.quizLoading}?quizId=${widget.quizId}');
+      // CAMBIO: Pasamos quizId y participantId
+      context.go('${AppRoutes.quizLoading}?quizId=${widget.quizId}&participantId=${widget.participantId}');
     }
   }
 

@@ -59,7 +59,7 @@ class _JoinQuizScreenState extends State<JoinQuizScreen> {
     }
 
     context.go(
-      '${AppRoutes.waiting}?quizId=${_viewModel.participant!.quizId}',
+      '${AppRoutes.waiting}?quizId=${_viewModel.participant!.quizId}&participantId=${_viewModel.participant!.id}',
     );
   }
 

@@ -9,23 +9,19 @@ import '../../features/admin/screens/create_administrator_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
 import '../../features/admin/screens/question_form_screen.dart';
 import '../../features/admin/screens/question_list_screen.dart';
-
 import '../../features/admin/screens/start_quiz_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
-
 import '../../features/home/screens/home_screen.dart';
-
+import '../../features/player/models/quiz_session_data.dart'; // <-- IMPORTACIÓN AGREGADA
 import '../../features/player/screens/finish_screen.dart';
 import '../../features/player/screens/join_quiz_screen.dart';
 import '../../features/player/screens/quiz_loading_screen.dart';
 import '../../features/player/screens/quiz_screen.dart';
 import '../../features/player/screens/waiting_screen.dart';
-
 import '../../features/quiz/screens/question_import_screen.dart';
 import '../../features/quiz/screens/quiz_detail_screen.dart';
 import '../../features/quiz/screens/quiz_form_screen.dart';
 import '../../features/quiz/screens/quiz_list_screen.dart';
-
 import '../../features/results/screens/results_screen.dart';
 import '../../features/results/screens/statistics_screen.dart';
 
@@ -38,17 +34,10 @@ final GoRouter appRouter = GoRouter(
       context,
       state,
       ) {
-    final session =
-        Supabase.instance.client.auth.currentSession;
-
-    final isLoggedIn =
-        session != null;
-
-    final location =
-        state.matchedLocation;
-
-    final isLoginRoute =
-        location == AppRoutes.login;
+    final session = Supabase.instance.client.auth.currentSession;
+    final isLoggedIn = session != null;
+    final location = state.matchedLocation;
+    final isLoginRoute = location == AppRoutes.login;
 
     // ============================================
     // RUTAS ADMINISTRATIVAS
@@ -56,8 +45,7 @@ final GoRouter appRouter = GoRouter(
 
     final isAdminRoute =
         location == AppRoutes.dashboard ||
-            location ==
-                AppRoutes.createAdministrator ||
+            location == AppRoutes.createAdministrator ||
             location == AppRoutes.quizList ||
             location == AppRoutes.quizForm ||
             location == AppRoutes.quizDetail ||
@@ -89,17 +77,12 @@ final GoRouter appRouter = GoRouter(
   },
 
   routes: [
-
     // ============================================
     // HOME
     // ============================================
-
     GoRoute(
       path: AppRoutes.home,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const HomeScreen();
       },
     ),
@@ -107,13 +90,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // LOGIN
     // ============================================
-
     GoRoute(
       path: AppRoutes.login,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const LoginScreen();
       },
     ),
@@ -121,13 +100,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // DASHBOARD
     // ============================================
-
     GoRoute(
       path: AppRoutes.dashboard,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const DashboardScreen();
       },
     ),
@@ -135,13 +110,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // CREAR ADMINISTRADOR
     // ============================================
-
     GoRoute(
       path: AppRoutes.createAdministrator,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const CreateAdministratorScreen();
       },
     ),
@@ -149,13 +120,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // CREAR QUIZ
     // ============================================
-
     GoRoute(
       path: AppRoutes.quizForm,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const QuizFormScreen();
       },
     ),
@@ -163,48 +130,32 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // DETALLE DEL QUIZ
     // ============================================
-
     GoRoute(
       path: AppRoutes.quizDetail,
-      builder: (
-          context,
-          state,
-          ) {
-        final quizId =
-        state.uri.queryParameters['quizId'];
+      builder: (context, state) {
+        final quizId = state.uri.queryParameters['quizId'];
 
-        if (quizId == null ||
-            quizId.isEmpty) {
+        if (quizId == null || quizId.isEmpty) {
           return const Scaffold(
             body: Center(
-              child: Text(
-                'No se especificó el Quiz.',
-              ),
+              child: Text('No se especificó el Quiz.'),
             ),
           );
         }
 
-        return QuizDetailScreen(
-          quizId: quizId,
-        );
+        return QuizDetailScreen(quizId: quizId);
       },
     ),
 
     GoRoute(
       path: AppRoutes.startQuiz,
-      builder: (
-          context,
-          state,
-          ) {
-        final quizId =
-        state.uri.queryParameters['quizId'];
+      builder: (context, state) {
+        final quizId = state.uri.queryParameters['quizId'];
 
         if (quizId == null || quizId.isEmpty) {
           return const Scaffold(
             body: Center(
-              child: Text(
-                'No se especificó el Quiz.',
-              ),
+              child: Text('No se especificó el Quiz.'),
             ),
           );
         }
@@ -212,8 +163,7 @@ final GoRouter appRouter = GoRouter(
         return FutureBuilder<Quiz?>(
           future: QuizRepository().getQuizById(quizId),
           builder: (context, snapshot) {
-            if (snapshot.connectionState ==
-                ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(
                 body: Center(
                   child: CircularProgressIndicator(),
@@ -221,20 +171,15 @@ final GoRouter appRouter = GoRouter(
               );
             }
 
-            if (snapshot.hasError ||
-                snapshot.data == null) {
+            if (snapshot.hasError || snapshot.data == null) {
               return const Scaffold(
                 body: Center(
-                  child: Text(
-                    'No se pudo cargar el Quiz.',
-                  ),
+                  child: Text('No se pudo cargar el Quiz.'),
                 ),
               );
             }
 
-            return StartQuizScreen(
-              quiz: snapshot.data!,
-            );
+            return StartQuizScreen(quiz: snapshot.data!);
           },
         );
       },
@@ -243,13 +188,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // LISTA DE PREGUNTAS
     // ============================================
-
     GoRoute(
       path: AppRoutes.questionList,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return QuestionListScreen();
       },
     ),
@@ -257,13 +198,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // FORMULARIO DE PREGUNTA
     // ============================================
-
     GoRoute(
       path: AppRoutes.questionForm,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const QuestionFormScreen();
       },
     ),
@@ -271,13 +208,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // CÓDIGO DE ACCESO
     // ============================================
-
     GoRoute(
       path: AppRoutes.accessCode,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const AccessCodeScreen();
       },
     ),
@@ -285,13 +218,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // LISTA DE QUIZZES
     // ============================================
-
     GoRoute(
       path: AppRoutes.quizList,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return QuizListScreen();
       },
     ),
@@ -299,41 +228,24 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // IMPORTAR PREGUNTAS DESDE EXCEL
     // ============================================
-
     GoRoute(
       path: AppRoutes.questionImport,
-      builder: (
-          context,
-          state,
-          ) {
-        final quizId =
-        state.uri.queryParameters['quizId'];
+      builder: (context, state) {
+        final quizId = state.uri.queryParameters['quizId'];
+        final questionCountString = state.uri.queryParameters['questionCount'];
+        final questionCount = int.tryParse(questionCountString ?? '');
 
-        final questionCountString =
-        state.uri.queryParameters[
-        'questionCount'];
-
-        final questionCount =
-        int.tryParse(
-          questionCountString ?? '',
-        );
-
-        if (quizId == null ||
-            quizId.isEmpty ||
-            questionCount == null) {
+        if (quizId == null || quizId.isEmpty || questionCount == null) {
           return const Scaffold(
             body: Center(
-              child: Text(
-                'Información del Quiz no válida.',
-              ),
+              child: Text('Información del Quiz no válida.'),
             ),
           );
         }
 
         return QuestionImportScreen(
           quizId: quizId,
-          requiredQuestionCount:
-          questionCount,
+          requiredQuestionCount: questionCount,
         );
       },
     ),
@@ -341,13 +253,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // UNIRSE A QUIZ
     // ============================================
-
     GoRoute(
       path: AppRoutes.join,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const JoinQuizScreen();
       },
     ),
@@ -355,24 +263,23 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // ESPERA
     // ============================================
-
     GoRoute(
       path: AppRoutes.waiting,
       builder: (context, state) {
         final quizId = state.uri.queryParameters['quizId'];
+        final participantId = state.uri.queryParameters['participantId'];
 
-        if (quizId == null || quizId.isEmpty) {
+        if (quizId == null || quizId.isEmpty || participantId == null || participantId.isEmpty) {
           return const Scaffold(
             body: Center(
-              child: Text(
-                'No se pudo identificar el Quiz.',
-              ),
+              child: Text('No se pudo identificar el Quiz o el Participante.'),
             ),
           );
         }
 
         return WaitingScreen(
           quizId: quizId,
+          participantId: participantId,
         );
       },
     ),
@@ -384,45 +291,50 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.quizLoading,
       builder: (context, state) {
         final quizId = state.uri.queryParameters['quizId'];
+        final participantId = state.uri.queryParameters['participantId'];
 
-        if (quizId == null || quizId.isEmpty) {
+        if (quizId == null || quizId.isEmpty || participantId == null || participantId.isEmpty) {
           return const Scaffold(
             body: Center(
-              child: Text(
-                'No se pudo identificar el Quiz.',
-              ),
+              child: Text('No se pudo identificar el Quiz o el Participante.'),
             ),
           );
         }
 
-        return QuizLoadingScreen(quizId: quizId);
+        return QuizLoadingScreen(
+          quizId: quizId,
+          participantId: participantId,
+        );
       },
     ),
 
     // ============================================
     // QUIZ DEL PARTICIPANTE
     // ============================================
-
     GoRoute(
       path: AppRoutes.quiz,
-      builder: (
-          context,
-          state,
-          ) {
-        return const QuizScreen();
+      builder: (context, state) {
+        // <-- CAMBIO CLAVE: Extraer los datos pasados por 'extra'
+        final sessionData = state.extra as QuizSessionData?;
+
+        if (sessionData == null) {
+          return const Scaffold(
+            body: Center(
+              child: Text('No se pudieron cargar los datos del Quiz.'),
+            ),
+          );
+        }
+
+        return QuizScreen(sessionData: sessionData);
       },
     ),
 
     // ============================================
     // FINALIZAR QUIZ
     // ============================================
-
     GoRoute(
       path: AppRoutes.finish,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const FinishScreen();
       },
     ),
@@ -430,13 +342,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // RESULTADOS
     // ============================================
-
     GoRoute(
       path: AppRoutes.results,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return ResultsScreen();
       },
     ),
@@ -444,13 +352,9 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // ESTADÍSTICAS
     // ============================================
-
     GoRoute(
       path: AppRoutes.statistics,
-      builder: (
-          context,
-          state,
-          ) {
+      builder: (context, state) {
         return const StatisticsScreen();
       },
     ),

@@ -1,19 +1,28 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../core/routes/app_routes.dart';
-import '../../../shared/widgets/app_scaffold.dart';
-import '../models/quiz_session_data.dart';
+import '../../../data/models/enums/answer_option.dart';
+import '../../../data/repositories/answer_repository.dart';
+
+import '../../player/models/prepared_question.dart';
+import '../../player/models/quiz_session_data.dart';
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final QuizSessionData sessionData;
+
+  const QuizScreen({
+    super.key,
+    required this.sessionData,
+  });
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  final AnswerRepository _answerRepository = AnswerRepository();
+
   QuizSessionData? _sessionData;
   int _currentIndex = 0;
   int? _selectedIndex;
@@ -22,54 +31,36 @@ class _QuizScreenState extends State<QuizScreen> {
   Timer? _timer;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    _sessionData = widget.sessionData;
+    // <-- CORRECCIÓN: Usar el tiempo configurado en el quiz
+    _timeLeft = widget.sessionData.timePerQuestionSeconds;
+    _startTimer();
+  }
 
-    if (_sessionData == null) {
-      final args = GoRouterState.of(context).extra;
-      if (args is QuizSessionData && args.questions.isNotEmpty) {
-        _sessionData = args;
-        _startTimer(); // Iniciar el temporizador al cargar la primera pregunta
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) context.go(AppRoutes.home);
-        });
-      }
-    }
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   void _startTimer() {
     _timer?.cancel();
-    _timeLeft = _sessionData!.timePerQuestionSeconds;
+    setState(() {
+      // <-- CORRECCIÓN: Reiniciar con el tiempo configurado
+      _timeLeft = widget.sessionData!.timePerQuestionSeconds;
+    });
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
       if (_timeLeft > 0) {
         setState(() {
           _timeLeft--;
         });
       } else {
-        timer.cancel();
         _handleTimeUp();
       }
     });
-  }
-
-  void _handleTimeUp() {
-    // El tiempo se acabó. Avanzamos sin guardar respuesta (selectedIndex queda en null)
-    if (_currentIndex < _sessionData!.questions.length - 1) {
-      setState(() {
-        _currentIndex++;
-        _selectedIndex = null;
-      });
-      _startTimer(); // Reiniciar timer para la nueva pregunta
-    } else {
-      context.go(AppRoutes.finish);
-    }
   }
 
   void _handleOptionSelected(int index) {
@@ -78,161 +69,171 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
-  void _nextQuestion() {
-    if (_selectedIndex == null) return; // Obligar a seleccionar una respuesta manualmente
+  Future<void> _nextQuestion() async {
+    if (_selectedIndex == null) return;
+
+    await _saveCurrentAnswer();
 
     if (_currentIndex < _sessionData!.questions.length - 1) {
       setState(() {
         _currentIndex++;
         _selectedIndex = null;
       });
-      _startTimer(); // Reiniciar timer para la nueva pregunta
+
+      _startTimer();
     } else {
       _timer?.cancel();
       context.go(AppRoutes.finish);
     }
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel(); // ¡Muy importante para evitar memory leaks!
-    super.dispose();
+  Future<void> _handleTimeUp() async {
+    _timer?.cancel();
+
+    if (_currentIndex < _sessionData!.questions.length - 1) {
+      setState(() {
+        _currentIndex++;
+        _selectedIndex = null;
+      });
+
+      _startTimer();
+    } else {
+      context.go(AppRoutes.finish);
+    }
+  }
+
+  Future<void> _saveCurrentAnswer() async {
+    if (_selectedIndex == null) return;
+
+    try {
+      final currentQuestion = _sessionData!.questions[_currentIndex];
+      final selectedText = currentQuestion.shuffledOptions[_selectedIndex!];
+
+      final originalOption = _getOriginalOption(
+        currentQuestion,
+        selectedText,
+      );
+
+      await _answerRepository.saveAnswer(
+        participantId: _sessionData!.participantId,
+        questionId: currentQuestion.question.id,
+        selectedOption: originalOption,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar respuesta: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  AnswerOption _getOriginalOption(
+      PreparedQuestion preparedQuestion,
+      String selectedText,
+      ) {
+    final question = preparedQuestion.question;
+
+    if (selectedText == question.optionA) {
+      return AnswerOption.A;
+    } else if (selectedText == question.optionB) {
+      return AnswerOption.B;
+    } else if (selectedText == question.optionC) {
+      return AnswerOption.C;
+    } else if (selectedText == question.optionD) {
+      return AnswerOption.D;
+    }
+
+    throw Exception('Opción no válida');
   }
 
   @override
   Widget build(BuildContext context) {
     if (_sessionData == null) {
-      return const AppScaffold(
-        title: 'Quiz',
-        child: Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     final currentQuestion = _sessionData!.questions[_currentIndex];
-    final totalQuestions = _sessionData!.questions.length;
-    final isTimeRunningOut = _timeLeft <= 5;
 
-    return AppScaffold(
-      title: 'Pregunta ${_currentIndex + 1} de $totalQuestions',
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Pregunta ${_currentIndex + 1} de ${_sessionData!.questions.length}'),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                '$_timeLeft s',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Temporizador visible
-            Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isTimeRunningOut ? Colors.red.shade50 : Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: isTimeRunningOut ? Colors.red : Colors.blue,
-                    width: 2,
+            Expanded(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Center(
+                    child: Text(
+                      currentQuestion.question.statement,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.timer_outlined,
-                      color: isTimeRunningOut ? Colors.red : Colors.blue,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$_timeLeft s',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isTimeRunningOut ? Colors.red : Colors.blue,
-                      ),
-                    ),
-                  ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ...List.generate(
+              currentQuestion.shuffledOptions.length,
+                  (index) => Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: ElevatedButton(
+                  onPressed: () => _handleOptionSelected(index),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectedIndex == index
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                    foregroundColor: _selectedIndex == index
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : null,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    currentQuestion.shuffledOptions[index],
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 24),
-
-            // Enunciado
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(
-                  currentQuestion.question.statement,
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
+            ElevatedButton(
+              onPressed: _selectedIndex != null ? _nextQuestion : null,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // Opciones mezcladas
-            Expanded(
-              child: ListView.separated(
-                itemCount: currentQuestion.shuffledOptions.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final isSelected = _selectedIndex == index;
-
-                  return InkWell(
-                    onTap: () => _handleOptionSelected(index),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : Theme.of(context).colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Colors.grey.shade300,
-                            ),
-                            child: Center(
-                              child: Text(
-                                String.fromCharCode(65 + index), // A, B, C, D
-                                style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              currentQuestion.shuffledOptions[index],
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Botón Siguiente / Finalizar
-            FilledButton(
-              onPressed: _selectedIndex == null ? null : _nextQuestion,
               child: Text(
-                _currentIndex == totalQuestions - 1 ? 'FINALIZAR QUIZ' : 'SIGUIENTE',
+                _currentIndex < _sessionData!.questions.length - 1
+                    ? 'SIGUIENTE'
+                    : 'FINALIZAR',
+                style: const TextStyle(fontSize: 18),
               ),
             ),
           ],
