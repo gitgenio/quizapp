@@ -47,11 +47,6 @@ class AdminNavigation extends StatelessWidget {
           label: Text('Quizzes'),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.help_outline),
-          selectedIcon: Icon(Icons.help),
-          label: Text('Preguntas'),
-        ),
-        NavigationRailDestination(
           icon: Icon(Icons.bar_chart_outlined),
           selectedIcon: Icon(Icons.bar_chart),
           label: Text('Resultados'),

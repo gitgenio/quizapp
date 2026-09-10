@@ -19,12 +19,6 @@ class DashboardScreen extends StatelessWidget {
       description: 'Crear y administrar cuestionarios.',
       route: AppRoutes.quizList,
       ),
-      (
-      icon: Icons.help_outline,
-      title: 'Preguntas',
-      description: 'Administrar banco de preguntas.',
-      route: AppRoutes.questionList,
-      ),
      (
       icon: Icons.bar_chart_outlined,
       title: 'Resultados',

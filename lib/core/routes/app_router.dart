@@ -7,7 +7,6 @@ import '../../data/repositories/quiz_repository.dart';
 import '../../features/admin/screens/create_administrator_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
 import '../../features/admin/screens/question_form_screen.dart';
-import '../../features/admin/screens/question_list_screen.dart';
 import '../../features/admin/screens/start_quiz_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/home/screens/home_screen.dart';
