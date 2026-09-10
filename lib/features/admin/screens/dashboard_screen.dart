@@ -25,13 +25,7 @@ class DashboardScreen extends StatelessWidget {
       description: 'Administrar banco de preguntas.',
       route: AppRoutes.questionList,
       ),
-      (
-      icon: Icons.password_outlined,
-      title: 'Código de Acceso',
-      description: 'Generar y compartir códigos.',
-      route: AppRoutes.accessCode,
-      ),
-      (
+     (
       icon: Icons.bar_chart_outlined,
       title: 'Resultados',
       description: 'Consultar resultados y estadísticas.',
@@ -74,24 +68,7 @@ class DashboardScreen extends StatelessWidget {
           crossAxisAlignment:
           CrossAxisAlignment.start,
           children: [
-            Text(
-              'Bienvenido',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium,
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              'Selecciona una opción para administrar QuizApp.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge,
-            ),
-
             const SizedBox(height: 28),
-
             Wrap(
               spacing: 20,
               runSpacing: 20,

@@ -52,11 +52,6 @@ class AdminNavigation extends StatelessWidget {
           label: Text('Preguntas'),
         ),
         NavigationRailDestination(
-          icon: Icon(Icons.password_outlined),
-          selectedIcon: Icon(Icons.password),
-          label: Text('Código'),
-        ),
-        NavigationRailDestination(
           icon: Icon(Icons.bar_chart_outlined),
           selectedIcon: Icon(Icons.bar_chart),
           label: Text('Resultados'),

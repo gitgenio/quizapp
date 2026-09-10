@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/models/quiz.dart';
 import '../../data/repositories/quiz_repository.dart';
-import '../../features/admin/screens/access_code_screen.dart';
 import '../../features/admin/screens/create_administrator_screen.dart';
 import '../../features/admin/screens/dashboard_screen.dart';
 import '../../features/admin/screens/question_form_screen.dart';
@@ -188,12 +187,12 @@ final GoRouter appRouter = GoRouter(
     // ============================================
     // LISTA DE PREGUNTAS
     // ============================================
-    GoRoute(
-      path: AppRoutes.questionList,
-      builder: (context, state) {
-        return QuestionListScreen();
-      },
-    ),
+    // GoRoute(
+    //   path: AppRoutes.questionList,
+    //   builder: (context, state) {
+    //     return QuestionListScreen();
+    //   },
+    // ),
 
     // ============================================
     // FORMULARIO DE PREGUNTA
@@ -202,16 +201,6 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.questionForm,
       builder: (context, state) {
         return const QuestionFormScreen();
-      },
-    ),
-
-    // ============================================
-    // CÓDIGO DE ACCESO
-    // ============================================
-    GoRoute(
-      path: AppRoutes.accessCode,
-      builder: (context, state) {
-        return const AccessCodeScreen();
       },
     ),
 
