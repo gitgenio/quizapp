@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../data/models/enums/answer_option.dart';
 import '../../../data/repositories/answer_repository.dart';
-
 import '../../player/models/prepared_question.dart';
 import '../../player/models/quiz_session_data.dart';
 
@@ -34,8 +33,11 @@ class _QuizScreenState extends State<QuizScreen> {
   void initState() {
     super.initState();
     _sessionData = widget.sessionData;
-    // <-- CORRECCIÓN: Usar el tiempo configurado en el quiz
     _timeLeft = widget.sessionData.timePerQuestionSeconds;
+    print('========== QUIZ SCREEN INIT ==========');
+    print('Participant ID: ${widget.sessionData.participantId}');
+    print('Time per question: ${widget.sessionData.timePerQuestionSeconds}');
+    print('Total questions: ${widget.sessionData.questions.length}');
     _startTimer();
   }
 
@@ -48,7 +50,6 @@ class _QuizScreenState extends State<QuizScreen> {
   void _startTimer() {
     _timer?.cancel();
     setState(() {
-      // <-- CORRECCIÓN: Reiniciar con el tiempo configurado
       _timeLeft = widget.sessionData!.timePerQuestionSeconds;
     });
 
@@ -64,30 +65,41 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _handleOptionSelected(int index) {
+    print('Opción seleccionada: índice $index');
     setState(() {
       _selectedIndex = index;
     });
   }
 
   Future<void> _nextQuestion() async {
-    if (_selectedIndex == null) return;
+    print('========== _nextQuestion llamado ==========');
+    print('_selectedIndex: $_selectedIndex');
 
+    if (_selectedIndex == null) {
+      print('ERROR: _selectedIndex es null, retornando');
+      return;
+    }
+
+    print('Llamando a _saveCurrentAnswer...');
     await _saveCurrentAnswer();
+    print('_saveCurrentAnswer completado');
 
     if (_currentIndex < _sessionData!.questions.length - 1) {
+      print('Avanzando a siguiente pregunta');
       setState(() {
         _currentIndex++;
         _selectedIndex = null;
       });
-
       _startTimer();
     } else {
+      print('Última pregunta, navegando a finish');
       _timer?.cancel();
       context.go(AppRoutes.finish);
     }
   }
 
   Future<void> _handleTimeUp() async {
+    print('========== TIEMPO AGOTADO ==========');
     _timer?.cancel();
 
     if (_currentIndex < _sessionData!.questions.length - 1) {
@@ -95,7 +107,6 @@ class _QuizScreenState extends State<QuizScreen> {
         _currentIndex++;
         _selectedIndex = null;
       });
-
       _startTimer();
     } else {
       context.go(AppRoutes.finish);
@@ -103,23 +114,38 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _saveCurrentAnswer() async {
-    if (_selectedIndex == null) return;
+    if (_selectedIndex == null) {
+      print('No hay respuesta seleccionada, no se guarda');
+      return;
+    }
 
     try {
+      print('========== GUARDANDO RESPUESTA ==========');
       final currentQuestion = _sessionData!.questions[_currentIndex];
       final selectedText = currentQuestion.shuffledOptions[_selectedIndex!];
+
+      print('Question ID: ${currentQuestion.question.id}');
+      print('Participant ID: ${_sessionData!.participantId}');
+      print('Texto seleccionado: $selectedText');
 
       final originalOption = _getOriginalOption(
         currentQuestion,
         selectedText,
       );
 
+      print('Opción original: ${originalOption.name}');
+
+      print('Llamando a AnswerRepository.saveAnswer...');
       await _answerRepository.saveAnswer(
         participantId: _sessionData!.participantId,
         questionId: currentQuestion.question.id,
         selectedOption: originalOption,
       );
-    } catch (e) {
+      print('✓ Respuesta guardada exitosamente en Supabase');
+
+    } catch (e, stackTrace) {
+      print('✗ ERROR al guardar respuesta: $e');
+      print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -147,7 +173,8 @@ class _QuizScreenState extends State<QuizScreen> {
       return AnswerOption.D;
     }
 
-    throw Exception('Opción no válida');
+
+    throw Exception('Opción no válida: $selectedText');
   }
 
   @override
