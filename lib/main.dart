@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/constants/supabase_config.dart';
@@ -13,7 +14,12 @@ Future<void> main() async {
     anonKey: SupabaseConfig.anonKey,
   );
 
-  runApp(const QuizApp());
+  // 2. ENVOLVER LA APP CON ProviderScope
+  runApp(
+    const ProviderScope(
+      child: QuizApp(),
+    ),
+  );
 }
 
 class QuizApp extends StatelessWidget {

@@ -100,18 +100,6 @@ class _DrawerMenu extends StatelessWidget {
         ),
 
         ListTile(
-          leading: const Icon(Icons.help),
-          title: const Text('Preguntas'),
-          onTap: () => context.go(AppRoutes.questionList),
-        ),
-
-        ListTile(
-          leading: const Icon(Icons.password),
-          title: const Text('Código'),
-          onTap: () => context.go(AppRoutes.accessCode),
-        ),
-
-        ListTile(
           leading: const Icon(Icons.bar_chart),
           title: const Text('Resultados'),
           onTap: () => context.go(AppRoutes.results),
