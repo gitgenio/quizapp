@@ -18,24 +18,33 @@ class ResultsRepository {
   /// - Respuestas correctas
   /// - Respuestas incorrectas
   /// - Puntaje porcentual
+  /// Obtiene los resultados consolidados de un Quiz específico.
   Future<List<QuizResult>> getQuizResults(String quizId) async {
     try {
+      print('🔍 [ResultsRepository] Ejecutando RPC get_quiz_results para: $quizId');
+
       final response = await _supabase.rpc(
         'get_quiz_results',
         params: {'p_quiz_id': quizId},
       );
 
+      print('📦 [ResultsRepository] Respuesta RPC: $response');
+      print('📦 [ResultsRepository] Tipo: ${response.runtimeType}');
+
       if (response == null) {
+        print('⚠️ [ResultsRepository] Respuesta es null');
         return [];
       }
 
       final List<dynamic> data = response as List<dynamic>;
+      print('📊 [ResultsRepository] Cantidad de registros: ${data.length}');
 
       return data.map((item) {
+        print('📝 [ResultsRepository] Item: $item');
         return QuizResult.fromMap(Map<String, dynamic>.from(item));
       }).toList();
     } catch (e) {
-      print('Error al obtener resultados: $e');
+      print('❌ [ResultsRepository] Error: $e');
       rethrow;
     }
   }

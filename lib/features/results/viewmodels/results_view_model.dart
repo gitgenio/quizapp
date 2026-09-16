@@ -1,35 +1,57 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/repositories/results_repository.dart';
 import '../../../data/models/quiz.dart';
 import '../../player/models/quiz_result.dart';
 
-/// ViewModel para la pantalla de resultados.
-class ResultsViewModel extends ChangeNotifier {
-  final ResultsRepository _repository;
+/// 1. Provider del repositorio
+final resultsRepositoryProvider = Provider<ResultsRepository>((ref) {
+  return ResultsRepository();
+});
 
-  ResultsViewModel({
-    ResultsRepository? repository,
-  }) : _repository = repository ?? ResultsRepository();
+/// 2. Estado del ViewModel
+class ResultsState {
+  final Quiz? quiz;
+  final List<QuizResult> results;
+  final bool isLoading;
+  final String? error;
+  final String? selectedQuizId;
 
-  Quiz? _quiz;
-  List<QuizResult> _results = [];
-  bool _isLoading = false;
-  String? _error;
-  String? _selectedQuizId;
+  ResultsState({
+    this.quiz,
+    this.results = const [],
+    this.isLoading = false,
+    this.error,
+    this.selectedQuizId,
+  });
 
-  Quiz? get quiz => _quiz;
-  List<QuizResult> get results => _results;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  String? get selectedQuizId => _selectedQuizId;
+  ResultsState copyWith({
+    Quiz? quiz,
+    List<QuizResult>? results,
+    bool? isLoading,
+    String? error,
+    String? selectedQuizId,
+  }) {
+    return ResultsState(
+      quiz: quiz ?? this.quiz,
+      results: results ?? this.results,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      selectedQuizId: selectedQuizId ?? this.selectedQuizId,
+    );
+  }
+}
 
-  /// Carga los resultados de un Quiz específico.
+/// 3. ViewModel (Notifier)
+class ResultsViewModel extends Notifier<ResultsState> {
+  @override
+  ResultsState build() => ResultsState();
+
+  ResultsRepository get _repository => ref.read(resultsRepositoryProvider);
+
   Future<void> loadResults(String quizId) async {
-    _isLoading = true;
-    _error = null;
-    _selectedQuizId = quizId;
-    notifyListeners();
+    print('🔍 Cargando resultados para quiz: $quizId');
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
       final resultsFuture = _repository.getQuizResults(quizId);
@@ -38,54 +60,47 @@ class ResultsViewModel extends ChangeNotifier {
       final results = await resultsFuture;
       final quiz = await quizFuture;
 
-      _results = results;
-      _quiz = quiz;
+      print('✅ Resultados obtenidos: ${results.length} participantes');
+      print('✅ Quiz: ${quiz?.title}');
+      print('✅ Primer resultado: ${results.firstOrNull?.displayName}');
+
+      state = state.copyWith(
+        isLoading: false,
+        results: results,
+        quiz: quiz,
+        selectedQuizId: quizId,
+      );
     } catch (e) {
-      _error = 'Error al cargar los resultados: $e';
-      print(_error);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      print('❌ Error: $e');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Error al cargar los resultados: $e',
+      );
     }
   }
 
-  /// Obtiene el detalle de respuestas de un participante.
-  Future<Map<String, dynamic>> getParticipantDetail(String participantId) async {
-    if (_selectedQuizId == null) {
-      throw Exception('No hay un quiz seleccionado');
-    }
-
-    return await _repository.getParticipantDetail(
-      participantId: participantId,
-      quizId: _selectedQuizId!,
-    );
-  }
-
-  /// Calcula el promedio de puntajes.
+  // Helpers para la UI (acceden a state.results)
   double get averageScore {
-    if (_results.isEmpty) return 0.0;
-    final total = _results.fold<double>(
-      0,
-          (sum, result) => sum + result.score,
-    );
-    return total / _results.length;
+    if (state.results.isEmpty) return 0.0;
+    final total = state.results.fold<double>(0, (sum, r) => sum + r.score);
+    return total / state.results.length;
   }
 
-  /// Obtiene el mejor puntaje.
   double get bestScore {
-    if (_results.isEmpty) return 0.0;
-    return _results.map((r) => r.score).reduce((a, b) => a > b ? a : b);
+    if (state.results.isEmpty) return 0.0;
+    return state.results.map((r) => r.score).reduce((a, b) => a > b ? a : b);
   }
 
-  /// Obtiene el peor puntaje.
   double get worstScore {
-    if (_results.isEmpty) return 0.0;
-    return _results.map((r) => r.score).reduce((a, b) => a < b ? a : b);
+    if (state.results.isEmpty) return 0.0;
+    return state.results.map((r) => r.score).reduce((a, b) => a < b ? a : b);
   }
 
-  /// Total de participantes.
-  int get totalParticipants => _results.length;
-
-  /// Verifica si hay resultados.
-  bool get hasResults => _results.isNotEmpty;
+  int get totalParticipants => state.results.length;
+  bool get hasResults => state.results.isNotEmpty;
 }
+
+/// 4. Provider del ViewModel
+final resultsViewModelProvider = NotifierProvider<ResultsViewModel, ResultsState>(
+  ResultsViewModel.new,
+);
