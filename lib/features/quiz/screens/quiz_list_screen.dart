@@ -61,30 +61,33 @@ class _QuizListScreenState extends State<QuizListScreen> {
 
     if (shouldDelete != true) return;
 
-    // try {
-    //   await _quizRepository.deleteQuiz(quiz.id);
-    //
-    //   if (!mounted) return;
-    //
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(
-    //       content: Text('Quiz eliminado con éxito'),
-    //       behavior: SnackBarBehavior.floating,
-    //     ),
-    //   );
-    //
-    //   _refresh();
-    // } catch (e) {
-    //   if (!mounted) return;
-    //
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(
-    //       content: Text('Error al eliminar el Quiz: $e'),
-    //       backgroundColor: Theme.of(context).colorScheme.error,
-    //       behavior: SnackBarBehavior.floating,
-    //     ),
-    //   );
-    // }
+    // ================================================================
+    // CÓDIGO DESCOMENTADO: ahora sí se ejecuta el borrado.
+    // ================================================================
+    try {
+      await _quizRepository.deleteQuiz(quiz.id);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Quiz eliminado con éxito'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al eliminar el Quiz: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override

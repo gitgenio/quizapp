@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -32,6 +34,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
 
   late Future<_QuizData> _quizDataFuture;
   bool _isStarting = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -39,13 +42,48 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     _loadQuizData();
   }
 
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
   void _loadQuizData() {
-    _quizDataFuture = _fetchQuizData();
+    _quizDataFuture = _fetchQuizData().then((data) {
+      _updatePolling(data.quiz.status);
+      return data;
+    });
+  }
+
+  /// Mientras el quiz esté EN CURSO, refresca cada 5 segundos
+  /// para detectar cuando todos los participantes terminan.
+  /// Si el quiz cambia de estado, se detiene el polling.
+  void _updatePolling(QuizStatus status) {
+    if (status == QuizStatus.started) {
+      _refreshTimer ??= Timer.periodic(
+        const Duration(seconds: 5),
+            (_) {
+          if (mounted) setState(_loadQuizData);
+        },
+      );
+    } else {
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
+    }
   }
 
   Future<_QuizData> _fetchQuizData() async {
-    final quiz = await _quizRepository.getQuizById(widget.quizId);
+    var quiz = await _quizRepository.getQuizById(widget.quizId);
     if (quiz == null) throw Exception('Quiz no encontrado');
+
+    // Si está en curso, verifica si todos los participantes ya terminaron.
+    if (quiz.status == QuizStatus.started) {
+      final finished =
+      await _quizRepository.finalizeQuizIfAllParticipantsFinished(quiz.id);
+      if (finished) {
+        quiz = await _quizRepository.getQuizById(widget.quizId) ?? quiz;
+      }
+    }
 
     final response = await Supabase.instance.client
         .from('questions')
@@ -114,8 +152,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     );
 
     try {
-      // LÍNEA CORREGIDA: usa getQuestionsForQuiz (tabla questions),
-      // no getSelectedQuestionsForQuiz (tabla quiz_selected_questions).
       final questions = await repository.getQuestionsForQuiz(quizId);
 
       if (!mounted) return;
@@ -186,11 +222,14 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       body: FutureBuilder<_QuizData>(
         future: _quizDataFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          // Spinner solo la primera vez (sin datos previos).
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snapshot.hasError) {
+          // Error solo si no hay datos previos que mostrar.
+          if (snapshot.hasError && !snapshot.hasData) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -349,6 +388,14 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Center(
+                        child: Text(
+                          'Se finalizará automáticamente cuando todos '
+                              'los participantes terminen.',
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ] else if (quiz.status == QuizStatus.finished) ...[
