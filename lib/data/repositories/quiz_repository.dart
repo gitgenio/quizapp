@@ -31,7 +31,7 @@ class QuizRepository {
         .toList();
   }
 
-  Future<Quiz?> getQuizById(String quizId) async { // Cambia a Quiz? para ser más seguro
+  Future<Quiz?> getQuizById(String quizId) async {
     final response = await _supabase.rpc(
       'get_quiz_by_id',
       params: {'p_quiz_id': quizId},
@@ -147,6 +147,18 @@ class QuizRepository {
         .update({
       'status': QuizStatus.started.name,
     })
+        .eq('id', quizId);
+  }
+
+  /// NUEVO: Actualiza el estado del Quiz.
+  /// Permite la transición draft -> waiting después de importar preguntas.
+  Future<void> updateStatus({
+    required String quizId,
+    required QuizStatus status,
+  }) async {
+    await _supabase
+        .from('quizzes')
+        .update({'status': status.name})
         .eq('id', quizId);
   }
 

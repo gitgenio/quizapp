@@ -34,6 +34,23 @@ class QuestionRepository {
     await _supabase.from('questions').insert(data);
   }
 
+  /// NUEVO: Obtiene las preguntas crudas del Quiz desde la tabla `questions`.
+  /// Se usa en el diálogo "VER PREGUNTAS" de QuizDetailScreen,
+  /// antes de que el Quiz sea iniciado.
+  Future<List<Question>> getQuestionsForQuiz(String quizId) async {
+    final response = await _supabase
+        .from('questions')
+        .select()
+        .eq('quiz_id', quizId)
+        .order('order', ascending: true);
+
+    final List<dynamic> data = response as List<dynamic>;
+
+    return data
+        .map((item) => Question.fromMap(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
   Future<List<Question>> getSelectedQuestionsForQuiz(String quizId) async {
     print('========== QUERY SELECTED QUESTIONS ==========');
     print('Quiz ID: $quizId');

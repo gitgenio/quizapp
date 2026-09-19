@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../data/models/enums/quiz_status.dart';
 import '../../../data/models/import_validation_result.dart';
 import '../../../data/models/parsed_question.dart';
-import '../../../data/repositories/question_repository.dart'; // Ajusta la ruta a tu repositorio
+import '../../../data/repositories/question_repository.dart';
+import '../../../data/repositories/quiz_repository.dart';
 
 class ImportPreviewScreen extends StatefulWidget {
   final String quizId;
@@ -26,16 +28,25 @@ class ImportPreviewScreen extends StatefulWidget {
 class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
   bool _isLoading = false;
 
-  /// Método para guardar las preguntas en Supabase
+  /// Guarda las preguntas en Supabase y transiciona el Quiz de 'draft' a 'waiting'.
   Future<void> _confirmImport() async {
     setState(() => _isLoading = true);
 
     try {
-      final repository = QuestionRepository();
+      final questionRepository = QuestionRepository();
+      final quizRepository = QuizRepository();
 
-      await repository.createQuestions(
+      // 1. Guardar preguntas en Supabase.
+      await questionRepository.createQuestions(
         quizId: widget.quizId,
         questions: widget.validationResult.questions,
+      );
+
+      // 2. Transicionar el Quiz de draft a waiting.
+      //    Esto es crítico: la RPC start_quiz_with_questions exige status=waiting.
+      await quizRepository.updateStatus(
+        quizId: widget.quizId,
+        status: QuizStatus.waiting,
       );
 
       if (!mounted) return;
@@ -47,7 +58,7 @@ class _ImportPreviewScreenState extends State<ImportPreviewScreen> {
         ),
       );
 
-      // Regresa a la pantalla anterior indicando éxito (true)
+      // Regresa a la pantalla anterior indicando éxito.
       Navigator.of(context).pop(true);
     } on PostgrestException catch (e) {
       if (!mounted) return;
