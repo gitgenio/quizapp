@@ -81,11 +81,8 @@ class QuizRepository {
     );
   }
 
-  /// CORREGIDO: elimina primero las filas hijas (por foreign keys)
-  /// y al final el quiz. Orden: answers -> quiz_selected_questions
-  /// -> questions -> participants -> quizzes.
+  /// Elimina primero las filas hijas (por foreign keys) y al final el quiz.
   Future<void> deleteQuiz(String id) async {
-    // 1. IDs de participantes del quiz
     final participantsResponse = await _supabase
         .from('participants')
         .select('id')
@@ -95,7 +92,6 @@ class QuizRepository {
         .map((e) => Map<String, dynamic>.from(e)['id'] as String)
         .toList();
 
-    // 2. Respuestas de esos participantes
     if (participantIds.isNotEmpty) {
       await _supabase
           .from('answers')
@@ -103,25 +99,21 @@ class QuizRepository {
           .inFilter('participant_id', participantIds);
     }
 
-    // 3. Preguntas seleccionadas del quiz
     await _supabase
         .from('quiz_selected_questions')
         .delete()
         .eq('quiz_id', id);
 
-    // 4. Preguntas del quiz
     await _supabase
         .from('questions')
         .delete()
         .eq('quiz_id', id);
 
-    // 5. Participantes del quiz
     await _supabase
         .from('participants')
         .delete()
         .eq('quiz_id', id);
 
-    // 6. Finalmente el quiz
     await _supabase
         .from('quizzes')
         .delete()
@@ -167,16 +159,13 @@ class QuizRepository {
   }
 
   String _generateAccessCode() {
-    const characters =
-        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
     final random = Random();
 
     return List.generate(
       6,
-          (_) => characters[
+          (_) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[
       random.nextInt(
-        characters.length,
+        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'.length,
       )],
     ).join();
   }
@@ -201,29 +190,27 @@ class QuizRepository {
         .eq('id', quizId);
   }
 
-  /// NUEVO: Verifica si TODOS los participantes del Quiz ya terminaron
-  /// (cada uno respondió la totalidad de sus preguntas asignadas).
-  /// Si es así, cambia el estado de 'started' a 'finished'.
-  ///
-  /// Retorna true si el quiz fue finalizado en esta llamada.
+  /// NUEVA REGLA DE AUTO-FINALIZACIÓN:
+  /// Un participante se considera terminado si:
+  ///   - su status es 'finished' (terminó respondiendo o por timeout), O
+  ///   - tiene respuestas >= preguntas asignadas (respaldo por si el status falló).
+  /// Cuando TODOS cumplen, el quiz pasa de 'started' a 'finished'.
   Future<bool> finalizeQuizIfAllParticipantsFinished(String quizId) async {
     final quiz = await getQuizById(quizId);
     if (quiz == null || quiz.status != QuizStatus.started) return false;
 
-    // 1. Participantes del quiz
     final participantsResponse = await _supabase
         .from('participants')
-        .select('id')
+        .select('id, status')
         .eq('quiz_id', quizId);
 
-    final participantIds = (participantsResponse as List)
-        .map((e) => Map<String, dynamic>.from(e)['id'] as String)
+    final participants = (participantsResponse as List)
+        .map((e) => Map<String, dynamic>.from(e))
         .toList();
 
-    // Sin participantes no hay nada que finalizar.
-    if (participantIds.isEmpty) return false;
+    if (participants.isEmpty) return false;
 
-    // 2. Preguntas que debe responder cada participante
+    // Preguntas que debe responder cada participante
     final selectedResponse = await _supabase
         .from('quiz_selected_questions')
         .select('question_id')
@@ -231,13 +218,14 @@ class QuizRepository {
 
     int expected = (selectedResponse as List).length;
     if (expected == 0) expected = quiz.questionCount;
-    if (expected == 0) return false;
 
-    // 3. Conteo de respuestas por participante
+    // Conteo de respuestas por participante
+    final ids = participants.map((p) => p['id'] as String).toList();
+
     final answersResponse = await _supabase
         .from('answers')
         .select('participant_id')
-        .inFilter('participant_id', participantIds);
+        .inFilter('participant_id', ids);
 
     final counts = <String, int>{};
     for (final row in (answersResponse as List)) {
@@ -245,10 +233,12 @@ class QuizRepository {
       counts[pid] = (counts[pid] ?? 0) + 1;
     }
 
-    // 4. ¿Todos respondieron todo?
-    final allFinished = participantIds.every(
-          (pid) => (counts[pid] ?? 0) >= expected,
-    );
+    final allFinished = participants.every((p) {
+      final pid = p['id'] as String;
+      final status = p['status'] as String?;
+      return status == 'finished' ||
+          (expected > 0 && (counts[pid] ?? 0) >= expected);
+    });
 
     if (!allFinished) return false;
 
@@ -256,10 +246,20 @@ class QuizRepository {
     return true;
   }
 
-  /// Inicia el Quiz de forma atómica:
-  /// 1. Verifica que esté en 'waiting'
-  /// 2. Selecciona y guarda las preguntas en quiz_selected_questions
-  /// 3. Cambia el estado a 'started'
+  /// NUEVO: cierre manual. Además de finalizar el quiz,
+  /// marca a todos los participantes como 'finished'
+  /// (para que aparezcan en resultados aunque no hayan respondido).
+  Future<void> finalizeQuizManually(String quizId) async {
+    await _supabase
+        .from('participants')
+        .update({'status': 'finished'})
+        .eq('quiz_id', quizId)
+        .neq('status', 'finished');
+
+    await updateStatus(quizId: quizId, status: QuizStatus.finished);
+  }
+
+  /// Inicia el Quiz de forma atómica (RPC existente).
   Future<List<Map<String, dynamic>>> startQuizWithQuestions(String quizId) async {
     final response = await _supabase.rpc(
       'start_quiz_with_questions',

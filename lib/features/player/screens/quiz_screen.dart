@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../data/models/enums/answer_option.dart';
 import '../../../data/repositories/answer_repository.dart';
+import '../../../data/repositories/participant_repository.dart';
 import '../../player/models/prepared_question.dart';
 import '../../player/models/quiz_session_data.dart';
 
@@ -21,6 +22,7 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   final AnswerRepository _answerRepository = AnswerRepository();
+  final ParticipantRepository _participantRepository = ParticipantRepository();
 
   QuizSessionData? _sessionData;
   int _currentIndex = 0;
@@ -38,6 +40,7 @@ class _QuizScreenState extends State<QuizScreen> {
     print('Participant ID: ${widget.sessionData.participantId}');
     print('Time per question: ${widget.sessionData.timePerQuestionSeconds}');
     print('Total questions: ${widget.sessionData.questions.length}');
+    _markParticipantPlaying();
     _startTimer();
   }
 
@@ -45,6 +48,31 @@ class _QuizScreenState extends State<QuizScreen> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  /// NUEVO: marca al participante como 'playing' al entrar al quiz.
+  Future<void> _markParticipantPlaying() async {
+    try {
+      await _participantRepository.updateStatus(
+        participantId: widget.sessionData.participantId,
+        status: 'playing',
+      );
+    } catch (e) {
+      print('No se pudo marcar playing: $e');
+    }
+  }
+
+  /// NUEVO: marca al participante como 'finished' al terminar,
+  /// ya sea respondiendo la última pregunta o por tiempo agotado.
+  Future<void> _markParticipantFinished() async {
+    try {
+      await _participantRepository.updateStatus(
+        participantId: _sessionData!.participantId,
+        status: 'finished',
+      );
+    } catch (e) {
+      print('No se pudo marcar finished: $e');
+    }
   }
 
   void _startTimer() {
@@ -93,6 +121,7 @@ class _QuizScreenState extends State<QuizScreen> {
       _startTimer();
     } else {
       print('Última pregunta, navegando a finish');
+      await _markParticipantFinished();
       _timer?.cancel();
       context.go(AppRoutes.finish);
     }
@@ -109,6 +138,8 @@ class _QuizScreenState extends State<QuizScreen> {
       });
       _startTimer();
     } else {
+      // Terminó por timeout: también se marca como finished.
+      await _markParticipantFinished();
       context.go(AppRoutes.finish);
     }
   }

@@ -56,8 +56,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     });
   }
 
-  /// Mientras el quiz esté EN CURSO, refresca cada 5 segundos
-  /// para detectar cuando todos los participantes terminan.
   void _updatePolling(QuizStatus status) {
     if (status == QuizStatus.started) {
       _refreshTimer ??= Timer.periodic(
@@ -76,7 +74,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     var quiz = await _quizRepository.getQuizById(widget.quizId);
     if (quiz == null) throw Exception('Quiz no encontrado');
 
-    // Auto-finalización: todos los participantes respondieron todo.
     if (quiz.status == QuizStatus.started) {
       final finished =
       await _quizRepository.finalizeQuizIfAllParticipantsFinished(quiz.id);
@@ -141,9 +138,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     }
   }
 
-  /// NUEVO: cierre manual para el profesor.
-  /// Útil cuando algún participante abandona o nunca responde,
-  /// caso en el que la auto-finalización nunca se cumpliría.
   Future<void> _finalizeManually(Quiz quiz) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -177,10 +171,8 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     });
 
     try {
-      await _quizRepository.updateStatus(
-        quizId: quiz.id,
-        status: QuizStatus.finished,
-      );
+      // CAMBIO: finaliza el quiz Y marca participantes como finished.
+      await _quizRepository.finalizeQuizManually(quiz.id);
 
       if (!mounted) return;
 
@@ -383,7 +375,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // ===== REGLA DE BOTONES =====
                     if (questionCount == 0) ...[
                       FilledButton.icon(
                         onPressed: () async {
@@ -467,7 +458,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      // NUEVO: cierre manual para alumnos abandonados
                       OutlinedButton.icon(
                         onPressed: _isFinishing ? null : () => _finalizeManually(quiz),
                         icon: _isFinishing
