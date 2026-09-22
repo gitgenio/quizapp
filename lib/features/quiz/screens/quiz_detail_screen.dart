@@ -34,6 +34,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
 
   late Future<_QuizData> _quizDataFuture;
   bool _isStarting = false;
+  bool _isFinishing = false;
   Timer? _refreshTimer;
 
   @override
@@ -57,7 +58,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
 
   /// Mientras el quiz esté EN CURSO, refresca cada 5 segundos
   /// para detectar cuando todos los participantes terminan.
-  /// Si el quiz cambia de estado, se detiene el polling.
   void _updatePolling(QuizStatus status) {
     if (status == QuizStatus.started) {
       _refreshTimer ??= Timer.periodic(
@@ -76,7 +76,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     var quiz = await _quizRepository.getQuizById(widget.quizId);
     if (quiz == null) throw Exception('Quiz no encontrado');
 
-    // Si está en curso, verifica si todos los participantes ya terminaron.
+    // Auto-finalización: todos los participantes respondieron todo.
     if (quiz.status == QuizStatus.started) {
       final finished =
       await _quizRepository.finalizeQuizIfAllParticipantsFinished(quiz.id);
@@ -102,7 +102,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     });
 
     try {
-      // Seguridad: si por alguna razón todavía está en draft, lo pasamos a waiting.
       if (quiz.status == QuizStatus.draft) {
         await _quizRepository.updateStatus(
           quizId: quiz.id,
@@ -142,6 +141,77 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     }
   }
 
+  /// NUEVO: cierre manual para el profesor.
+  /// Útil cuando algún participante abandona o nunca responde,
+  /// caso en el que la auto-finalización nunca se cumpliría.
+  Future<void> _finalizeManually(Quiz quiz) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Finalizar Quiz'),
+        content: Text(
+          '¿Deseas finalizar "${quiz.title}" ahora? '
+              'Los participantes que sigan respondiendo no podrán enviar más respuestas.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Finalizar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    if (_isFinishing) return;
+
+    setState(() {
+      _isFinishing = true;
+    });
+
+    try {
+      await _quizRepository.updateStatus(
+        quizId: quiz.id,
+        status: QuizStatus.finished,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Quiz finalizado correctamente.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      setState(() {
+        _isFinishing = false;
+        _loadQuizData();
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isFinishing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo finalizar el Quiz: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _showQuestionsDialog(String quizId) async {
     final repository = QuestionRepository();
 
@@ -155,7 +225,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       final questions = await repository.getQuestionsForQuiz(quizId);
 
       if (!mounted) return;
-      Navigator.of(context).pop(); // cerrar loading
+      Navigator.of(context).pop();
 
       await showDialog(
         context: context,
@@ -189,7 +259,7 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop(); // cerrar loading si quedó abierto
+      Navigator.of(context).pop();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -222,13 +292,11 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
       body: FutureBuilder<_QuizData>(
         future: _quizDataFuture,
         builder: (context, snapshot) {
-          // Spinner solo la primera vez (sin datos previos).
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Error solo si no hay datos previos que mostrar.
           if (snapshot.hasError && !snapshot.hasData) {
             return Center(
               child: Padding(
@@ -396,6 +464,26 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                           'Se finalizará automáticamente cuando todos '
                               'los participantes terminen.',
                           textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // NUEVO: cierre manual para alumnos abandonados
+                      OutlinedButton.icon(
+                        onPressed: _isFinishing ? null : () => _finalizeManually(quiz),
+                        icon: _isFinishing
+                            ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                            : const Icon(Icons.stop_circle_outlined),
+                        label: const Text('FINALIZAR QUIZ'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         ),
                       ),
                     ] else if (quiz.status == QuizStatus.finished) ...[
