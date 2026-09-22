@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
+import '../../../core/utils/pdf_generator.dart';
 import '../../../data/models/quiz.dart';
 import '../../../data/repositories/quiz_repository.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -525,14 +526,39 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         PrimaryButton(
           text: 'Exportar PDF',
           icon: Icons.picture_as_pdf,
-          onPressed: () {
+          onPressed: () async {
+            // Mostrar indicador de carga
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text(
-                  'Función de exportación en desarrollo...',
-                ),
+                content: Text('Generando PDF, por favor espera...'),
+                duration: Duration(seconds: 2),
               ),
             );
+
+            try {
+              await PdfGenerator.generateAndDownloadQuizResults(
+                quiz: _selectedQuiz!,
+                results: state.results,
+              );
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('PDF generado y descargado exitosamente.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error al generar el PDF: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
         ),
 
