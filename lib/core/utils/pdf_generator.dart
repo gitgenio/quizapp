@@ -26,6 +26,12 @@ class PdfGenerator {
         ? results.fold<double>(0, (sum, r) => sum + r.score) / totalParticipants
         : 0.0;
 
+    // NOTA: Ajusta 'results.first.date' o 'results.first.completedAt' según
+    // el nombre real de la propiedad de fecha en tu modelo QuizResult.
+    final quizDate = results.isNotEmpty && results.first.createdAt != null
+        ? results.first.createdAt!
+        : DateTime.now();
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -62,9 +68,26 @@ class PdfGenerator {
               pw.SizedBox(height: 20),
 
               // INFO DEL QUIZ
-              pw.Text('Quiz: ${quiz.title}', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                  'Quiz: ${quiz.title}',
+                  style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)
+              ),
               pw.SizedBox(height: 8),
-              pw.Text('Fecha de generación: ${_formatDate(DateTime.now())}', style: pw.TextStyle(fontSize: 12)),
+
+              // FECHAS (Generación a la izquierda, Realización a la derecha)
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                      'Fecha de generación: ${_formatDate(DateTime.now())}',
+                      style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700)
+                  ),
+                  pw.Text(
+                      'Fecha de realización: ${_formatDate(quizDate)}',
+                      style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)
+                  ),
+                ],
+              ),
               pw.SizedBox(height: 20),
 
               // ESTADÍSTICAS GENERALES
@@ -101,32 +124,40 @@ class PdfGenerator {
                 headerHeight: 25,
                 cellHeight: 30,
                 cellAlignments: {
-                  0: pw.Alignment.center,
-                  1: pw.Alignment.centerLeft,
-                  2: pw.Alignment.center,
-                  3: pw.Alignment.center,
-                  4: pw.Alignment.center,
+                  0: pw.Alignment.center,       // #
+                  1: pw.Alignment.centerLeft,   // Participante
+                  2: pw.Alignment.centerLeft,   // Email
+                  3: pw.Alignment.center,       // Respuestas
+                  4: pw.Alignment.center,       // Puntaje
                 },
                 headers: [
                   '#',
                   'Participante',
-                  'Correctas',
-                  'Incorrectas',
+                  'Email',
+                  'Respuestas',
                   'Puntaje',
                 ],
                 data: results.asMap().entries.map((entry) {
                   final index = entry.key;
                   final result = entry.value;
+
+                  // Usamos el totalQuestions que ya viene en tu modelo
+                  final totalQuestions = result.totalQuestions;
+
+                  // Mostramos el email, o un mensaje por defecto si viene vacío
+                  final emailDisplay = result.email.trim().isNotEmpty
+                      ? result.email
+                      : 'No disponible';
+
                   return [
                     '${index + 1}',
                     result.displayName,
-                    '${result.correctAnswers}',
-                    '${result.incorrectAnswers}',
+                    emailDisplay,
+                    '${result.correctAnswers}/$totalQuestions', // Ej: 1/3
                     '${result.score.toStringAsFixed(1)}%',
                   ];
                 }).toList(),
               ),
-
               pw.Spacer(),
 
               // PIE DE PÁGINA
@@ -145,7 +176,8 @@ class PdfGenerator {
     final pdfBytes = await pdf.save();
 
     // Printing.sharePdf maneja la descarga en Web y la vista previa en móvil/escritorio
-    await Printing.sharePdf(bytes: pdfBytes, body: fileName);
+    // Nota: se usa 'filename' en lugar de 'body' que es el parámetro correcto del paquete
+    await Printing.sharePdf(bytes: pdfBytes, filename: fileName);
   }
 
   static pw.Widget _buildStatColumn(String label, String value) {

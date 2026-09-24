@@ -1,32 +1,20 @@
 import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
-/// Representa el resultado consolidado de un participante en un Quiz.
 class QuizResult extends Equatable {
-  /// Identificador del participante.
   final String participantId;
-
-  /// Nombre del participante.
   final String displayName;
-
-  /// Cantidad de respuestas correctas.
+  final String email; // <-- 1. AGREGADO
   final int correctAnswers;
-
-  /// Cantidad de respuestas incorrectas.
   final int incorrectAnswers;
-
-  /// Total de preguntas del quiz.
   final int totalQuestions;
-
-  /// Puntaje porcentual (0-100).
   final double score;
-
-  /// Fecha de participación.
   final DateTime createdAt;
 
   const QuizResult({
     required this.participantId,
     required this.displayName,
+    required this.email, // <-- 2. AGREGADO
     required this.correctAnswers,
     required this.incorrectAnswers,
     required this.totalQuestions,
@@ -37,6 +25,7 @@ class QuizResult extends Equatable {
   QuizResult copyWith({
     String? participantId,
     String? displayName,
+    String? email, // <-- 3. AGREGADO
     int? correctAnswers,
     int? incorrectAnswers,
     int? totalQuestions,
@@ -46,6 +35,7 @@ class QuizResult extends Equatable {
     return QuizResult(
       participantId: participantId ?? this.participantId,
       displayName: displayName ?? this.displayName,
+      email: email ?? this.email, // <-- 4. AGREGADO
       correctAnswers: correctAnswers ?? this.correctAnswers,
       incorrectAnswers: incorrectAnswers ?? this.incorrectAnswers,
       totalQuestions: totalQuestions ?? this.totalQuestions,
@@ -58,6 +48,7 @@ class QuizResult extends Equatable {
     return {
       'participant_id': participantId,
       'display_name': displayName,
+      'email': email, // <-- 5. AGREGADO
       'correct_answers': correctAnswers,
       'incorrect_answers': incorrectAnswers,
       'total_questions': totalQuestions,
@@ -70,6 +61,7 @@ class QuizResult extends Equatable {
     return QuizResult(
       participantId: map['participant_id'] as String,
       displayName: map['display_name'] as String,
+      email: map['email'] as String? ?? 'No disponible', // <-- 6. AGREGADO (con fallback seguro)
       correctAnswers: map['correct_answers'] as int,
       incorrectAnswers: map['incorrect_answers'] as int,
       totalQuestions: map['total_questions'] as int,
@@ -80,13 +72,13 @@ class QuizResult extends Equatable {
 
   String toJson() => json.encode(toMap());
 
-  factory QuizResult.fromJson(String source) =>
-      QuizResult.fromMap(json.decode(source));
+  factory QuizResult.fromJson(String source) => QuizResult.fromMap(json.decode(source));
 
   @override
   List<Object?> get props => [
     participantId,
     displayName,
+    email, // <-- 7. AGREGADO
     correctAnswers,
     incorrectAnswers,
     totalQuestions,
@@ -94,8 +86,5 @@ class QuizResult extends Equatable {
     createdAt,
   ];
 
-  /// Calcula el porcentaje de respuestas correctas.
-  double get percentage => totalQuestions > 0
-      ? (correctAnswers / totalQuestions) * 100
-      : 0.0;
+  double get percentage => totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0.0;
 }
