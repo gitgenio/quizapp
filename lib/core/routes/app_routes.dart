@@ -56,6 +56,4 @@ class AppRoutes {
   // ============================================
 
   static const results = '/results';
-
-  static const statistics = '/statistics';
 }

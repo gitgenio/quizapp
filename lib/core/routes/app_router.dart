@@ -21,7 +21,6 @@ import '../../features/quiz/screens/quiz_detail_screen.dart';
 import '../../features/quiz/screens/quiz_form_screen.dart';
 import '../../features/quiz/screens/quiz_list_screen.dart';
 import '../../features/results/screens/results_screen.dart';
-import '../../features/results/screens/statistics_screen.dart';
 
 import 'app_routes.dart';
 
@@ -52,8 +51,7 @@ final GoRouter appRouter = GoRouter(
             location == AppRoutes.questionForm ||
             location == AppRoutes.questionImport ||
             location == AppRoutes.accessCode ||
-            location == AppRoutes.results ||
-            location == AppRoutes.statistics;
+            location == AppRoutes.results ;
 
     // ============================================
     // USUARIO NO AUTENTICADO
@@ -334,16 +332,6 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.results,
       builder: (context, state) {
         return ResultsScreen();
-      },
-    ),
-
-    // ============================================
-    // ESTADÍSTICAS
-    // ============================================
-    GoRoute(
-      path: AppRoutes.statistics,
-      builder: (context, state) {
-        return const StatisticsScreen();
       },
     ),
   ],
