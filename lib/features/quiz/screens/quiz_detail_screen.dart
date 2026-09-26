@@ -171,7 +171,6 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
     });
 
     try {
-      // CAMBIO: finaliza el quiz Y marca participantes como finished.
       await _quizRepository.finalizeQuizManually(quiz.id);
 
       if (!mounted) return;
@@ -476,6 +475,16 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                           ),
                         ),
                       ),
+                      // NUEVO: botón para volver al dashboard cuando está en curso
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => context.go(AppRoutes.dashboard),
+                        icon: const Icon(Icons.dashboard),
+                        label: const Text('VOLVER AL DASHBOARD'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
                     ] else if (quiz.status == QuizStatus.finished) ...[
                       Container(
                         padding: const EdgeInsets.all(20),
@@ -496,6 +505,16 @@ class _QuizDetailScreenState extends State<QuizDetailScreen> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      // NUEVO: botón para volver al dashboard cuando está finalizado
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: () => context.go(AppRoutes.dashboard),
+                        icon: const Icon(Icons.dashboard),
+                        label: const Text('VOLVER AL DASHBOARD'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),
                     ],
