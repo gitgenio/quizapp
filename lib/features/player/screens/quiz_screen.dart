@@ -31,6 +31,10 @@ class _QuizScreenState extends State<QuizScreen> {
   late int _timeLeft;
   Timer? _timer;
 
+  /// NUEVO: evita que _nextQuestion y _handleTimeUp guarden
+  /// la misma respuesta dos veces si ocurren en el mismo instante.
+  bool _isTransitioning = false;
+
   @override
   void initState() {
     super.initState();
@@ -72,8 +76,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  /// NUEVO: construye el payload extra para FinishScreen.
-  /// Deriva quizId de la primera pregunta porque QuizSessionData no lo trae.
+  /// Construye el payload extra para FinishScreen.
   Map<String, String> _buildFinishExtra() {
     final quizId = _sessionData!.questions.isNotEmpty
         ? _sessionData!.questions.first.question.quizId
@@ -117,6 +120,16 @@ class _QuizScreenState extends State<QuizScreen> {
       return;
     }
 
+    if (_isTransitioning) {
+      print('Ya hay una transición en curso, ignorando pulsación');
+      return;
+    }
+
+    _isTransitioning = true;
+
+    // El alumno confirmó: detenemos el reloj mientras se guarda.
+    _timer?.cancel();
+
     print('Llamando a _saveCurrentAnswer...');
     await _saveCurrentAnswer();
     print('_saveCurrentAnswer completado');
@@ -127,29 +140,46 @@ class _QuizScreenState extends State<QuizScreen> {
         _currentIndex++;
         _selectedIndex = null;
       });
+      _isTransitioning = false;
       _startTimer();
     } else {
       print('Última pregunta, navegando a finish');
       await _markParticipantFinished();
-      _timer?.cancel();
-      // CAMBIO: pasamos participantId y quizId a FinishScreen.
       context.go(AppRoutes.finish, extra: _buildFinishExtra());
     }
   }
 
   Future<void> _handleTimeUp() async {
     print('========== TIEMPO AGOTADO ==========');
+
+    // Si ya se está guardando/avanzando, no hacemos nada.
+    if (_isTransitioning) return;
+
+    _isTransitioning = true;
     _timer?.cancel();
+
+    // ============================================================
+    // CORRECCIÓN: si el tiempo se agotó PERO el alumno tenía una
+    // opción seleccionada, esa respuesta SE GUARDA y SE VALE.
+    // Si no había ninguna seleccionada, queda como incorrecta
+    // (simplemente no se inserta ninguna fila en answers).
+    // ============================================================
+    if (_selectedIndex != null) {
+      print('Tiempo agotado con opción seleccionada: guardando respuesta');
+      await _saveCurrentAnswer();
+    } else {
+      print('Tiempo agotado sin opción seleccionada: se cuenta como incorrecta');
+    }
 
     if (_currentIndex < _sessionData!.questions.length - 1) {
       setState(() {
         _currentIndex++;
         _selectedIndex = null;
       });
+      _isTransitioning = false;
       _startTimer();
     } else {
       await _markParticipantFinished();
-      // CAMBIO: pasamos participantId y quizId a FinishScreen.
       context.go(AppRoutes.finish, extra: _buildFinishExtra());
     }
   }
