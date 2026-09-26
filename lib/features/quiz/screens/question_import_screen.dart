@@ -579,12 +579,13 @@ class _QuestionImportScreenState
           height: 20,
         ),
         ElevatedButton.icon(
-          onPressed: () {
-            // Posponemos la navegación al siguiente frame para evitar el choque de layout en Web
-            WidgetsBinding.instance.addPostFrameCallback((_) {
+          onPressed: () async {
+            // Posponemos la navegación al siguiente frame para evitar
+            // el choque de layout en Flutter Web.
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
               if (!mounted) return;
 
-              Navigator.of(context).push(
+              final imported = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(
                   builder: (_) => ImportPreviewScreen(
                     quizId: widget.quizId,
@@ -594,8 +595,17 @@ class _QuestionImportScreenState
                   ),
                 ),
               );
+
+              if (!mounted) return;
+
+              // Si la importación fue confirmada,
+              // regresamos también a QuizDetailScreen.
+              if (imported == true) {
+                Navigator.of(context).pop(true);
+              }
             });
           },
+
           icon: const Icon(
             Icons.preview,
           ),
