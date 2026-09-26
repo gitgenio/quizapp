@@ -2,7 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/player/models/quiz_result.dart';
 import '../models/quiz.dart';
-import '../models/participant.dart';
 
 /// Repositorio para consultar resultados de Quizzes.
 class ResultsRepository {
@@ -12,12 +11,6 @@ class ResultsRepository {
     SupabaseClient? supabase,
   }) : _supabase = supabase ?? Supabase.instance.client;
 
-  /// Obtiene los resultados consolidados de un Quiz específico.
-  ///
-  /// Utiliza la función RPC 'get_quiz_results' que calcula:
-  /// - Respuestas correctas
-  /// - Respuestas incorrectas
-  /// - Puntaje porcentual
   /// Obtiene los resultados consolidados de un Quiz específico.
   Future<List<QuizResult>> getQuizResults(String quizId) async {
     try {
@@ -49,6 +42,24 @@ class ResultsRepository {
     }
   }
 
+  /// NUEVO: Obtiene el resultado consolidado de UN participante específico.
+  /// Reutiliza getQuizResults y filtra por participantId.
+  Future<QuizResult?> getParticipantResult({
+    required String participantId,
+    required String quizId,
+  }) async {
+    try {
+      final results = await getQuizResults(quizId);
+      for (final r in results) {
+        if (r.participantId == participantId) return r;
+      }
+      return null;
+    } catch (e) {
+      print('Error al obtener resultado del participante: $e');
+      return null;
+    }
+  }
+
   /// Obtiene información básica del Quiz.
   Future<Quiz?> getQuizById(String quizId) async {
     try {
@@ -75,7 +86,6 @@ class ResultsRepository {
     required String quizId,
   }) async {
     try {
-      // Obtenemos las respuestas del participante con la información de las preguntas
       final response = await _supabase
           .from('answers')
           .select('''
@@ -96,7 +106,6 @@ class ResultsRepository {
           .eq('participant_id', participantId)
           .order('created_at', ascending: true);
 
-      // Obtenemos el nombre del participante
       final participant = await _supabase
           .from('participants')
           .select('display_name')

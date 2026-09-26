@@ -25,12 +25,6 @@ class AdminNavigation extends StatelessWidget {
             context.go(AppRoutes.quizList);
             break;
           case 2:
-            context.go(AppRoutes.questionList);
-            break;
-          case 3:
-            context.go(AppRoutes.accessCode);
-            break;
-          case 4:
             context.go(AppRoutes.results);
             break;
         }

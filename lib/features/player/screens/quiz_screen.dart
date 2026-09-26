@@ -50,7 +50,6 @@ class _QuizScreenState extends State<QuizScreen> {
     super.dispose();
   }
 
-  /// NUEVO: marca al participante como 'playing' al entrar al quiz.
   Future<void> _markParticipantPlaying() async {
     try {
       await _participantRepository.updateStatus(
@@ -62,8 +61,6 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  /// NUEVO: marca al participante como 'finished' al terminar,
-  /// ya sea respondiendo la última pregunta o por tiempo agotado.
   Future<void> _markParticipantFinished() async {
     try {
       await _participantRepository.updateStatus(
@@ -73,6 +70,18 @@ class _QuizScreenState extends State<QuizScreen> {
     } catch (e) {
       print('No se pudo marcar finished: $e');
     }
+  }
+
+  /// NUEVO: construye el payload extra para FinishScreen.
+  /// Deriva quizId de la primera pregunta porque QuizSessionData no lo trae.
+  Map<String, String> _buildFinishExtra() {
+    final quizId = _sessionData!.questions.isNotEmpty
+        ? _sessionData!.questions.first.question.quizId
+        : '';
+    return {
+      'participantId': _sessionData!.participantId,
+      'quizId': quizId,
+    };
   }
 
   void _startTimer() {
@@ -123,7 +132,8 @@ class _QuizScreenState extends State<QuizScreen> {
       print('Última pregunta, navegando a finish');
       await _markParticipantFinished();
       _timer?.cancel();
-      context.go(AppRoutes.finish);
+      // CAMBIO: pasamos participantId y quizId a FinishScreen.
+      context.go(AppRoutes.finish, extra: _buildFinishExtra());
     }
   }
 
@@ -138,9 +148,9 @@ class _QuizScreenState extends State<QuizScreen> {
       });
       _startTimer();
     } else {
-      // Terminó por timeout: también se marca como finished.
       await _markParticipantFinished();
-      context.go(AppRoutes.finish);
+      // CAMBIO: pasamos participantId y quizId a FinishScreen.
+      context.go(AppRoutes.finish, extra: _buildFinishExtra());
     }
   }
 

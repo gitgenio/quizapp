@@ -321,7 +321,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.finish,
       builder: (context, state) {
-        return const FinishScreen();
+        // Extraemos los datos enviados desde QuizScreen
+        final extra = state.extra as Map<String, dynamic>?;
+        return FinishScreen(
+          participantId: extra?['participantId'] as String?,
+          quizId: extra?['quizId'] as String?,
+        );
       },
     ),
 
