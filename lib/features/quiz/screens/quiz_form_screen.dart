@@ -207,9 +207,7 @@ class _QuizFormScreenState
                     decoration:
                     const InputDecoration(
                       labelText:
-                      'Preguntas por participante',
-                      helperText:
-                      'Ejemplo: 5',
+                      ' # Preguntas por participante',
                       border:
                       OutlineInputBorder(),
                     ),
@@ -230,8 +228,6 @@ class _QuizFormScreenState
                     const InputDecoration(
                       labelText:
                       'Tiempo por pregunta (segundos)',
-                      helperText:
-                      'Ejemplo: 30',
                       border:
                       OutlineInputBorder(),
                     ),
