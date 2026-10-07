@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/routes/app_routes.dart';
 import '../../../core/utils/responsive.dart';
@@ -17,6 +18,22 @@ class AdminScaffold extends StatelessWidget {
     required this.child,
   });
 
+  /// CORREGIDO: cierra la sesión real en Supabase y luego navega al login.
+  /// Antes solo navegaba a /login y el redirect del router rebotaba al
+  /// dashboard porque la sesión seguía activa.
+  Future<void> _signOut(BuildContext context) async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (e) {
+      // Si falla la llamada al servidor (sin red), la sesión local
+      // igualmente se limpia; continuamos al login de todos modos.
+      print('Error al cerrar sesión: $e');
+    }
+
+    if (!context.mounted) return;
+    context.go(AppRoutes.login);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
@@ -33,7 +50,7 @@ class AdminScaffold extends StatelessWidget {
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),
-            onPressed: () => context.go(AppRoutes.login),
+            onPressed: () => _signOut(context),
           ),
           const SizedBox(width: 8),
         ],
